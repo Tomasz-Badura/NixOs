@@ -27,20 +27,22 @@
 
     home.packages = with pkgs; 
     [ 
+        #programs
         microsoft-edge
         google-chrome
         vscode
         xfce.thunar
         gnome.gnome-system-monitor
-        nerdfonts
         steam
         vesktop
         legendary-gl
         krita
         obsidian
         obs-studio
-        (lutris.override {
-            extraPkgs = pkgs: [
+        (lutris.override 
+        {
+            extraPkgs = pkgs: 
+            [
                 wineWowPackages.stable
                 winetricks
             ];
@@ -91,6 +93,7 @@
         '';
     };
 
+    # didn't know where to logically put these lmao
     systemd.user.startServices = "sd-switch";
 
     # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion

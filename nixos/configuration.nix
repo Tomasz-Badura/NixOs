@@ -1,7 +1,6 @@
 { config, lib, pkgs, inputs, outputs, ... }:
 
 {
-  # flakes / imports
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   imports =
@@ -10,11 +9,9 @@
     ./scripts.nix
   ];
 
-  # grub
   boot.loader.grub.enable = true;
   boot.loader.grub.device = "/dev/sda";
 
-  # time / locale
   time.timeZone = "Europe/Warsaw";
   i18n.defaultLocale = "en_US.UTF-8";
 
@@ -30,7 +27,6 @@
     LC_TIME = "en_US.UTF-8";
   };
 
-  # services
   services = {
     libinput.enable = true;
     
@@ -43,50 +39,64 @@
     displayManager.autoLogin.user = "terminator";
   };
 
-  # fonts
-  fonts = {
-    enableDefaultPackages = true;
-    fontconfig = {
-      defaultFonts = {
-        serif = [  "IosevkaTermSlab" ];
-        sansSerif = [ "AurulentSansM" ];
-        monospace = [ "FiraCode" ];
-      };
-    };
-  };
-
-  # audio
   hardware.pulseaudio.enable = true;
 
-  # networking
   networking = {
     hostName = "TERMINATOR";
     enableIPv6 = false;
     networkmanager.enable = true;
   };
 
-  # users
   users.users.terminator = {
     initialPassword = "initpass";
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" "docker" "uinput" "input" ];
   };
 
-  # programs
   programs = {
     nix-ld.enable = true;
     nix-ld.libraries = with pkgs; [
       # Any dynamically linked executables
     ];
+
+    steam = 
+    {
+      enable = true;
+      remotePlay.openFirewall = true;
+      dedicatedServer.openFirewall = true;
+    };
   };
 
-  # auth
+  fonts = 
+  {
+    packages = with pkgs; 
+    [
+      noto-fonts
+      noto-fonts-cjk
+      noto-fonts-emoji
+      font-awesome
+      source-han-sans
+      source-han-sans-japanese
+      source-han-serif-japanese
+    ];
+
+    fontconfig = 
+    {
+      enable = true;
+      defaultFonts = 
+      {
+        monospace = [ "Meslo LG M Regular Nerd Font Complete Mono" ];
+        serif = [ "Noto Serif" "Source Han Serif" ];
+        sansSerif = [ "Noto Sans" "Source Han Sans" ];
+      };
+    };
+  };
+
   security.sudo = {
     enable = true;
     wheelNeedsPassword = false;
   };
 
-  # polkit
   security.polkit.enable = true;
   
   systemd = {
@@ -108,7 +118,6 @@
       };
     };
 
-  # startup script
     user.services.startup-script = {
       enable = true;
       description = "startup script";
@@ -121,7 +130,6 @@
     };
   };
 
-  # packages
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
@@ -147,7 +155,6 @@
     gcc
   ];
 
-  # overlays
   nixpkgs.overlays = [
     (self: super: {
       dwm = super.dwm.overrideAttrs (oldattrs: {
@@ -166,17 +173,10 @@
     })
   ];
 
-  programs.steam = 
-  {
-    enable = true;
-    remotePlay.openFirewall = true;
-    dedicatedServer.openFirewall = true;
-  };
-
-  # other
+  # didn't know where to logically put these lmao
   virtualisation.docker.enable = true;
   hardware.uinput.enable = true;
 
-  # https://search.nixos.org/options?channel=24.05&show=system.stateVersion&from=0&size=50&sort=relevance&type=packages&query=stateVersion
+  # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   system.stateVersion = "24.05"; 
 }
