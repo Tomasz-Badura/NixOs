@@ -96,9 +96,56 @@ let
 
     printf "%s%s %s%%%s" "$s2d_color3" "vol" "$percent" "$s2d_reset" && exit 0
   '';
+
+  nixconfig = pkgs.writeShellScriptBin "nixconfig" ''
+    if [ -z "$1" ]; then
+        echo "Usage: nixconfig <path-to-cloned-repo>"
+        exit 1
+    fi
+
+    REPO_PATH=$(realpath "$1")
+
+    if ! sudo code --wait /config --user-data-dir --no-sandbox; then
+        echo "Error opening VS Code."
+        exit 1
+    fi
+
+    if ! sudo cp -r /config/* "$REPO_PATH"; then
+        echo "Error copying files to $REPO_PATH"
+        exit 1
+    fi
+
+    cd "$REPO_PATH" || { echo "Error changing directory to $REPO_PATH"; exit 1; }
+
+    if ! git add .; then
+        echo "Error adding files to git"
+        exit 1
+    fi
+
+    NIXOS_GENERATION=$(nixos-version | awk '{print $2}')
+
+    if ! git commit -m "Update configuration - $NIXOS_GENERATION"; then
+        echo "Error committing changes to git"
+        exit 1
+    fi
+
+    if ! sudo nixos-rebuild switch --flake /config; then
+        echo "error rebuilding nixos"
+        exit 1
+    fi
+
+    if ! home-manager switch --flake /config; then
+        echo "Error rebuilding home manager"
+        exit 1
+    fi
+
+    echo "Configuration successfully updated and committed."
+  '';
+
 in
 {
   environment.systemPackages = with pkgs; [
+    nixconfig
     sb-status2d
     sb-battery
     sb-datetime
