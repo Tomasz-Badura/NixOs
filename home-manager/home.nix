@@ -51,7 +51,9 @@
         wezterm
         gparted
         pavucontrol
+        
         picom
+        feh
     ];
 
     programs = 
