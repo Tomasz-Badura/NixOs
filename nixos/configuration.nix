@@ -162,7 +162,7 @@
       dwm = super.dwm.overrideAttrs (oldattrs: {
         src = fetchGit {
           url = "https://github.com/Tomasz-Badura/dwm-config.git";
-          rev = "44db5a74b98171bd77d6dbda67d7c416847b25fd";
+          rev = "a7ce0df2af90c854c5bb70dd83cfa7e882457845";
         }; 
       });
 
