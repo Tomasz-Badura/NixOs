@@ -162,14 +162,14 @@
       dwm = super.dwm.overrideAttrs (oldattrs: {
         src = fetchGit {
           url = "https://github.com/Tomasz-Badura/dwm-config.git";
-          rev = "b5c6554fd052022df790ccbb68ede799457487ba";
+          rev = "c7e8380e504d2f97f5e251ee4cf584c378bfc06d";
         }; 
       });
 
       dwmblocks = super.dwmblocks.overrideAttrs (oldattrs: {
         src = fetchGit {
           url = "https://github.com/Tomasz-Badura/dwmblocks-config.git";
-          rev = "453f78e250134e071c56c33d61bb3a7dfb344a45";
+          rev = "c01f09f3fb94a5fa5937a5007a383a950fdcff57";
         };
       });
     })
