@@ -169,7 +169,7 @@
       dwmblocks = super.dwmblocks.overrideAttrs (oldattrs: {
         src = fetchGit {
           url = "https://github.com/Tomasz-Badura/dwmblocks-config.git";
-          rev = "15001d810d8ade0df43ef9886474a843117c5ca5";
+          rev = "453f78e250134e071c56c33d61bb3a7dfb344a45";
         };
       });
     })
