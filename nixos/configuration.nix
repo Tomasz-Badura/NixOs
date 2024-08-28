@@ -76,6 +76,7 @@
       noto-fonts-cjk
       noto-fonts-emoji
       font-awesome
+      powerline-fonts
       source-han-sans
       source-han-sans-japanese
       source-han-serif-japanese
@@ -86,7 +87,7 @@
       enable = true;
       defaultFonts = 
       {
-        monospace = [ "Meslo LG M Regular Nerd Font Complete Mono" ];
+        monospace = [ "Ubuntu Mono derivative Powerline" ];
         serif = [ "Noto Serif" "Source Han Serif" ];
         sansSerif = [ "Noto Sans" "Source Han Sans" ];
       };
@@ -161,7 +162,7 @@
       dwm = super.dwm.overrideAttrs (oldattrs: {
         src = fetchGit {
           url = "https://github.com/Tomasz-Badura/dwm-config.git";
-          rev = "537e1ab1aab9a5ff2fe715a0ba99ab293f4cede0";
+          rev = "ea6da3f89c1a2632e7af7f88635aec012192ed2f";
         }; 
       });
 
