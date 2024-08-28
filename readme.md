@@ -14,4 +14,5 @@
 from here you can fork/copy the config to your own repo, change the origin for (your-repo-path/NixOs)
 and then run:
 - nixconfig (your-repo-path) ex: ~/NixOs
+
 it will open vscode as sudo in /config, when vscode closes it will copy /config to provided path, change to that dir and run git add, git stage, git commit with current nixos generation, then rebuild nixos and home-manager.
