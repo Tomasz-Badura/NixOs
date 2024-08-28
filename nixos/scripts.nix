@@ -11,7 +11,7 @@ let
 
         [ "$status" = "Charging" ] && icon_charge="ch"
 
-        printf "%s%s%s %d%%%s" "$accent_color" "$icon_charge" "bt" "$percent" "$reset_color"
+        printf "%s%s%s %d%%%s" "$accent_color" "$icon_charge" "bt" "$text_color" "$percent" "$reset_color"
     done && exit 0
   '';
 
@@ -21,9 +21,10 @@ let
       source sb-colors
 
       case $BLOCK_BUTTON in
-      1) wezterm start -- bash -c "date; exec bash"
+      1) wezterm start -- bash -c "date; exec bash";;
+      esac
 
-      printf "%s%s %s%s" "$accent_color" "$(date '+%a, %H:%M')" "$reset_color" && exit 0
+      printf "%s%s %s%s" "$text_color" "$(date '+%a, %H:%M')" "$reset_color" && exit 0
   '';
 
   sb-internet = pkgs.writeShellScriptBin "sb-internet" ''
@@ -35,15 +36,15 @@ let
     show_ename=false
 
     info="$(nmcli dev | grep 'wifi')"
-    echo "$info" | grep -wq 'connected' && icon_wifi="conn" || icon_wifi=""
+    echo "$info" | grep -wq 'connected' && icon_wifi="wifi" || icon_wifi=""
     $show_wname && wname="$(echo "$info" | awk '$1=$2=$3=""; FNR == 1 {print $0};' | sed 's/^ *//g')"
 
     info="$(nmcli dev | grep 'ethernet')"
-    echo "$info" | grep -wq 'connected' && icon_ethr="conn eth" || icon_ethr=""
+    echo "$info" | grep -wq 'connected' && icon_ethr="ethernet" || icon_ethr=""
     $show_ename && ename="$(echo "$info" | awk '$1=$2=$3=""; FNR == 1 {print $0};' | sed 's/^ *//g')"
 
     printf "%s%s" "$text_color" "$icon_wifi" && $show_wname && printf " %s" "$wname"
-    [ -n "$icon_ethr" ] && printf " %s%s" "$accent_color" "$icon_ethr" && $show_ename && printf " %s" "$ename"
+    [ -n "$icon_ethr" ] && printf " %s%s" "$icon_ethr" && $show_ename && printf " %s" "$ename"
     printf "%s" "$reset_color" && exit 0
   '';
 
@@ -51,9 +52,7 @@ let
       # Description: Script to get ram usage
 
       source sb-colors
-
-      icon_ram="ram"
-      printf "%s%s %s%s" "$accent_color" "$icon_ram" "$(free -mh --si | grep '^Mem:' | awk '{print $3}')" "$reset_color" && exit 0
+      printf "%s%s %s%s" "$accent_color" "ram" "$text_color" "$(free -mh --si | grep '^Mem:' | awk '{print $3}')" "$reset_color" && exit 0
   '';
 
   sb-volume = pkgs.writeShellScriptBin "sb-volume" ''
@@ -64,14 +63,14 @@ let
       info="$(amixer get Master | grep '%' | head -n1)"
       percent="$(echo "$info" | sed -E 's/.*\[(.*)%\].*/\1/')"
 
-      printf "%s%s %s%%%s" "$accent_color" "vol" "$percent" "$reset_color" && exit 0
+      printf "%s%s %s%%%s" "$accent_color" "vol" "$text_color" "$percent" "$reset_color" && exit 0
   '';
 
   sb-colors = pkgs.writeShellScriptBin "sb-colors" ''
     # Description: Script to define color variables for status scripts
 
     text_color="^c#000000^"  # Black text
-    accent_color="^c#E06C75^"  # Pink accent
+    accent_color="^c#FFB6FC^"  # Pink accent
     reset_color="^d^"  # Reset color
   '';
 
@@ -120,10 +119,80 @@ let
     echo "Configuration successfully updated and committed."
   '';
 
+  nixrebuild = pkgs.writeShellScriptBin "nixrebuild" ''
+    flag_home=false
+    flag_nixos=false
+    flag_commit=""
+
+    while getopts "hnc:" option; do
+        case $option in
+            h)
+                flag_home=true
+                ;;
+            n)
+                flag_nixos=true
+                ;;
+            c)
+                flag_commit=$OPTARG
+                ;;
+            *)
+                echo "Usage: $0 [-h] [-n] [-c value]"
+                echo "-h      no home rebuild"
+                echo "-n      no nixos rebuild"
+                echo "-c      commit changes"
+                exit 1
+                ;;
+        esac
+    done
+
+    shift $((OPTIND - 1))
+    REPO_PATH=$(realpath "$flag_commit")
+
+    if [ -d "$REPO_PATH" ]; then
+        if ! sudo cp -r /config/* "$REPO_PATH"; then
+            echo "Error copying files to $REPO_PATH"
+            exit 1
+        fi
+
+        cd "$REPO_PATH" || { echo "Error changing directory to $REPO_PATH"; exit 1; }
+
+        if ! git add .; then
+            echo "Error adding files to git"
+            exit 1
+        fi
+
+        NIXOS_GENERATION=$(sudo nix-env --list-generations --profile /nix/var/nix/profiles/system | grep current | awk '{print $1}')
+
+        if ! git commit -m "Update configuration - $NIXOS_GENERATION"; then
+            echo "Error committing changes to git"
+            exit 1
+        fi
+    else
+        echo "Repository path does not exist: $REPO_PATH"
+        exit 1
+    fi
+
+    if [ "$flag_nixos" = false ]; then
+        if ! sudo nixos-rebuild switch --flake /config; then
+            echo "Error rebuilding NixOS"
+            exit 1
+        fi
+    fi
+
+    if [ "$flag_home" = false ]; then
+        if ! home-manager switch --flake /config; then
+            echo "Error rebuilding home manager"
+            exit 1
+        fi
+    fi
+
+    echo "Finished"
+  '';
 in
 {
   environment.systemPackages = with pkgs; [
     nixconfig
+    nixrebuild
     sb-colors
     sb-battery
     sb-datetime
