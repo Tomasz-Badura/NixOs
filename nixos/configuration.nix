@@ -34,7 +34,8 @@
     xserver.windowManager.dwm.enable = true;
     xserver.xkb.layout = "us";
     xserver.resolutions = [{x = 1920; y = 1080; }];
-    
+    xserver.excludePackages = [ pkgs.xterm ];
+
     displayManager.autoLogin.enable = true;
     displayManager.autoLogin.user = "terminator";
   };

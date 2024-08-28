@@ -24,7 +24,7 @@
         username = "terminator";
         homeDirectory = "/home/terminator";
     };
-
+    
     home.packages = with pkgs; 
     [ 
         #programs
