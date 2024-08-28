@@ -51,6 +51,7 @@
         wezterm
         gparted
         pavucontrol
+        picom
     ];
 
     programs = 
@@ -81,17 +82,21 @@
         };
     };
 
-    services.xremap = 
-    {
-        withX11 = true;
-        yamlConfig = 
-        ''
-	modmap
-	  - name: global modmap
-	keymap
-	  - name: global keymap
-        '';
-    };
+    services = {
+        picom.enable = true;
+        
+        xremap = 
+        {
+            withX11 = true;
+            yamlConfig = 
+            ''
+                modmap
+                - name: global modmap
+                keymap
+                - name: global keymap
+            '';
+        };
+    }
 
     # didn't know where to logically put these lmao
     systemd.user.startServices = "sd-switch";
