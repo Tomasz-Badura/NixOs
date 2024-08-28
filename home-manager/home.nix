@@ -96,7 +96,7 @@
                 - name: global keymap
             '';
         };
-    }
+    };
 
     # didn't know where to logically put these lmao
     systemd.user.startServices = "sd-switch";
