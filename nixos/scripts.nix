@@ -122,7 +122,7 @@ let
         exit 1
     fi
 
-    NIXOS_GENERATION=$(nixos-version | awk '{print $2}')
+    NIXOS_GENERATION=$(sudo nix-env --list-generations --profile /nix/var/nix/profiles/system | grep current | awk '{print $1}')
 
     if ! git commit -m "Update configuration - $NIXOS_GENERATION"; then
         echo "Error committing changes to git"
