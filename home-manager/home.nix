@@ -52,6 +52,7 @@
         gparted
         pavucontrol
         
+        picom
         feh
     ];
 
@@ -85,6 +86,7 @@
 
     services = 
     {
+        picom.enable = true;
         xremap = 
         {
             withX11 = true;

@@ -86,8 +86,10 @@ let
         echo "Error opening VS Code."
         exit 1
     fi
+    
+    find "$REPO_PATH" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
 
-    if ! sudo rm -rf "$REPO_PATH"/*; then
+    if [ $? -ne 0 ]; then
         echo "Error cleaning files in $REPO_PATH"
         exit 1
     fi
@@ -154,7 +156,9 @@ let
     REPO_PATH=$(realpath "$flag_commit")
 
     if [ -d "$REPO_PATH" ]; then
-        if ! sudo rm -rf "$REPO_PATH"/*; then
+        find "$REPO_PATH" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+
+        if [ $? -ne 0 ]; then
             echo "Error cleaning files in $REPO_PATH"
             exit 1
         fi
