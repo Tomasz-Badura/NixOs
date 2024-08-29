@@ -92,13 +92,6 @@
         {
             frame-opacity = 0.7;
             corner-radius = 3;
-            backend = "glx";
-            dithered-present = false;
-            vsync = true;
-            detect-rounded-corners = true;
-            detect-client-opacity = true;
-            detect-transient = true;
-            use-damage = true;
         };
 
         xremap = 
