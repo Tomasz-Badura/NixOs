@@ -52,7 +52,6 @@
         gparted
         pavucontrol
         
-        picom
         feh
     ];
 
@@ -86,14 +85,6 @@
 
     services = 
     {
-        picom.enable = true;
-
-        picom.settings = 
-        {
-            frame-opacity = 0.7;
-            corner-radius = 3;
-        };
-
         xremap = 
         {
             withX11 = true;

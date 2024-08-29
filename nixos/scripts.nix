@@ -87,6 +87,11 @@ let
         exit 1
     fi
 
+    if ! sudo rm -rf "$REPO_PATH"/*; then
+        echo "Error cleaning files in $REPO_PATH"
+        exit 1
+    fi
+
     if ! sudo cp -r /config/* "$REPO_PATH"; then
         echo "Error copying files to $REPO_PATH"
         exit 1
@@ -149,6 +154,11 @@ let
     REPO_PATH=$(realpath "$flag_commit")
 
     if [ -d "$REPO_PATH" ]; then
+        if ! sudo rm -rf "$REPO_PATH"/*; then
+            echo "Error cleaning files in $REPO_PATH"
+            exit 1
+        fi
+
         if ! sudo cp -r /config/* "$REPO_PATH"; then
             echo "Error copying files to $REPO_PATH"
             exit 1
@@ -167,9 +177,6 @@ let
             echo "Error committing changes to git"
             exit 1
         fi
-    else
-        echo "Repository path does not exist: $REPO_PATH"
-        exit 1
     fi
 
     if [ "$flag_nixos" = false ]; then
