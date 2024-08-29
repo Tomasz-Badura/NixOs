@@ -84,9 +84,14 @@
         };
     };
 
-    services = {
-        picom.enable = true;
-        
+    services = 
+    {
+        picom = 
+        {
+            enable = true;
+            settings = builtins.readFile ./picom.conf;
+        };
+
         xremap = 
         {
             withX11 = true;
