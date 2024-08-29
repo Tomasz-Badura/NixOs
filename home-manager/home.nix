@@ -91,7 +91,7 @@
         picom.settings = 
         {
             # Shadows
-            shadow = true;
+            shadow = false;
             # shadow-radius = 7;
             # shadow-opacity = 0.75;
             # shadow-offset-x = -7;
