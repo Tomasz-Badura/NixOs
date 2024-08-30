@@ -27,18 +27,16 @@
     
     home.packages = with pkgs; 
     [ 
-        #programs
-        microsoft-edge
-        google-chrome
-        vscode
-        xfce.thunar
-        gnome.gnome-system-monitor
-        steam
-        vesktop
-        legendary-gl
-        krita
-        obsidian
-        obs-studio
+        microsoft-edge # browser
+        google-chrome # browser
+        vscode # code editor
+        pcmanfm # file explorer
+        kdePackages.plasma-systemmonitor # system monitor
+        steam # game launcher
+        vesktop # discord
+        krita # painting program
+        obsidian # text editor
+        obs-studio # screen recording
         (lutris.override 
         {
             extraPkgs = pkgs: 
@@ -46,14 +44,21 @@
                 wineWowPackages.stable
                 winetricks
             ];
-        })
-        mangohud
-        wezterm
-        gparted
-        pavucontrol
-        
-        picom
-        feh
+        }) # gaming platform
+        mangohud # overlay for monitoring
+        wezterm # terminal
+        gparted # partition editor
+        pavucontrol # volume control
+        mpv # media player
+        reaper # DAW
+        feh # image viewer
+        picom # compositor
+        flameshot # screenshot app
+        github-desktop # github client
+        unityhub # unity game engine
+        gimp # image editor
+        kdePackages.kdenlive # video editor
+        audacity # audio recorder and editor
     ];
 
     programs = 
@@ -97,6 +102,25 @@
                 keymap
                 - name: global keymap
             '';
+        };
+    };
+
+    xdg.mimeApps = 
+    {
+        enable = true;
+        defaultApplications = 
+        {
+            #"text/plain" = [ "nvim.desktop" "gedit.desktop" ];
+            "image/jpeg" = [ "feh.desktop" ];
+            "image/png" = [ "feh.desktop" ];
+            "image/gif" = [ "feh.desktop" ];
+            "video/mp4" = [ "mpv.desktop" ];
+            "video/x-matroska" = [ "mpv.desktop" ];
+            "video/avi" = [ "mpv.desktop" ];
+            "audio/mpeg" = [ "mpv.desktop" ];
+            "audio/wav" = [ "mpv.desktop" ];
+            "application/pdf" = [ "microsoft-edge.desktop" ];
+            "text/html" = [ "microsoft-edge.desktop" ];
         };
     };
 

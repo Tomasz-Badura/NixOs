@@ -87,9 +87,7 @@ let
         exit 1
     fi
     
-    find "$REPO_PATH" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-
-    if [ $? -ne 0 ]; then
+    if ! sudo rm -rf "$REPO_PATH"/*; then
         echo "Error cleaning files in $REPO_PATH"
         exit 1
     fi
@@ -101,14 +99,14 @@ let
 
     cd "$REPO_PATH" || { echo "Error changing directory to $REPO_PATH"; exit 1; }
 
-    if ! git add .; then
+    if ! sudo git add .; then
         echo "Error adding files to git"
         exit 1
     fi
 
     NIXOS_GENERATION=$(sudo nix-env --list-generations --profile /nix/var/nix/profiles/system | grep current | awk '{print $1}')
 
-    if ! git commit -m "Update configuration - $NIXOS_GENERATION"; then
+    if ! sudo git commit -m "Update configuration - $NIXOS_GENERATION"; then
         echo "Error committing changes to git"
         exit 1
     fi
@@ -156,9 +154,7 @@ let
     REPO_PATH=$(realpath "$flag_commit")
 
     if [ -d "$REPO_PATH" ]; then
-        find "$REPO_PATH" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
-
-        if [ $? -ne 0 ]; then
+        if ! sudo rm -rf "$REPO_PATH"/*; then
             echo "Error cleaning files in $REPO_PATH"
             exit 1
         fi
@@ -170,14 +166,14 @@ let
 
         cd "$REPO_PATH" || { echo "Error changing directory to $REPO_PATH"; exit 1; }
 
-        if ! git add .; then
+        if ! sudo git add .; then
             echo "Error adding files to git"
             exit 1
         fi
 
         NIXOS_GENERATION=$(sudo nix-env --list-generations --profile /nix/var/nix/profiles/system | grep current | awk '{print $1}')
 
-        if ! git commit -m "Update configuration - $NIXOS_GENERATION"; then
+        if ! sudo git commit -m "Update configuration - $NIXOS_GENERATION"; then
             echo "Error committing changes to git"
             exit 1
         fi

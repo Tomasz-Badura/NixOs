@@ -102,8 +102,8 @@
   security.polkit.enable = true;
   
   systemd = {
-    user.services.polkit-gnome-authentication-agent-1 = {
-      description = "polkit-gnome-authentication-agent-1";
+    user.services.polkit-kde-agent-1 = {
+      description = "polkit-kde-agent-1";
       wantedBy = ["graphical-session.target"];
       wants = ["graphical-session.target"];
       after = [
@@ -113,7 +113,7 @@
       ];
       serviceConfig = {
         Type = "simple";
-        ExecStart = "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
+        ExecStart = "${pkgs.kdePackages.polkit-kde-agent-1}/libexec/polkit-kde-authentication-agent-1";
         Restart = "on-failure";
         RestartSec = 1;
         TimeoutStopSec = 10;
@@ -140,21 +140,23 @@
     vim
     docker
     eza
-
+    htop
     dmenu
     dwm
     dwmblocks
-    
     wget
     powershell
     git
     unzip
+    p7zip
+    pulsemixer
     neofetch
     networkmanager
     home-manager
-
+    kdePackages.polkit-kde-agent-1
     gnumake
     gcc
+    wine
   ];
 
   nixpkgs.overlays = [
@@ -162,7 +164,7 @@
       dwm = super.dwm.overrideAttrs (oldattrs: {
         src = fetchGit {
           url = "https://github.com/Tomasz-Badura/dwm-config.git";
-          rev = "7ba44c5e3e39403d797e4644fe65574d4993ca8f";
+          rev = "ef997ddc957c39eaa55cad491628bd7ddcf0fcfe";
         }; 
       });
 
