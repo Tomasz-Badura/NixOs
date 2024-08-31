@@ -11,7 +11,7 @@
     {
         overlays = 
         [
-
+            outputs.overlays.unstable-packages
         ];
 
         config = {
@@ -27,16 +27,34 @@
     
     home.packages = with pkgs; 
     [ 
+        unstable.vscode # code editor
         microsoft-edge # browser
         google-chrome # browser
-        vscode # code editor
         pcmanfm # file explorer
-        kdePackages.plasma-systemmonitor # system monitor
+        (lib.hiPrio unstable.bottom) # system monitor cli
         steam # game launcher
         vesktop # discord
         krita # painting program
         obsidian # text editor
-        obs-studio # screen recording
+        unstable.obs-studio # screen recording
+        mangohud # overlay for monitoring
+        wezterm # terminal
+        pavucontrol # volume control
+        mpv # media player
+        feh # image viewer
+        picom # compositor
+        flameshot # screenshot app
+        unstable.github-desktop # github client
+        unstable.unityhub # unity game engine
+        unstable.gimp # image editor
+        unstable.kdePackages.kdenlive # video editor
+        unstable.glaxnimate # kdenlive dependency
+        audacity # audio recorder and editor
+        unstable.lazydocker # docker desktop alternative cli
+        unstable.lenovo-legion # lenovo legion toolkit alternative
+        nixfmt-rfc-style # nix formatter
+        # TODO DAW
+
         (lutris.override 
         {
             extraPkgs = pkgs: 
@@ -45,31 +63,39 @@
                 winetricks
             ];
         }) # gaming platform
-        mangohud # overlay for monitoring
-        wezterm # terminal
-        gparted # partition editor
-        pavucontrol # volume control
-        mpv # media player
-        reaper # DAW
-        feh # image viewer
-        picom # compositor
-        flameshot # screenshot app
-        github-desktop # github client
-        unityhub # unity game engine
-        gimp # image editor
-        kdePackages.kdenlive # video editor
-        audacity # audio recorder and editor
     ];
 
     programs = 
     {
         home-manager.enable = true;
         
+        wezterm = 
+        {
+            enable = true;
+            extraConfig = ''
+                return {
+                font_size = 14.0,
+                color_scheme = "Github",
+                hide_tab_bar_if_only_one_tab = true,
+                font = wezterm.font("MesloLGSDZ Nerd Font Mono"),
+                }
+            '';
+        };
+
+        bottom = {
+            enable = true;
+            settings = {
+                styles = {
+                    theme = "default-light";
+                };
+            };
+        };
+
         git = 
         {
             enable = true;
             userEmail="tomaszbadurakontakt@gmail.com";
-            userName="Tomasz Badura";
+            userName="Tomasz-Badura";
         };
 
         spicetify =
@@ -110,7 +136,7 @@
         enable = true;
         defaultApplications = 
         {
-            #"text/plain" = [ "nvim.desktop" "gedit.desktop" ];
+            "text/plain" = [ "notepad" ];
             "image/jpeg" = [ "feh.desktop" ];
             "image/png" = [ "feh.desktop" ];
             "image/gif" = [ "feh.desktop" ];

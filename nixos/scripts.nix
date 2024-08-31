@@ -9,61 +9,70 @@ let
         percent=$(cat "$battery/capacity") 
         status="$(cat "$battery/status")"
 
-        [ "$status" = "Charging" ] && icon_charge="ch"
+        [ "$status" = "Charging" ] && icon_charge="charging"
+        [ "$status" = "Not charging" ] && icon_charge= "idle"
 
-        printf "%s%s%s %d%%%s" "$accent_color" "$icon_charge" "bt" "$text_color" "$percent" "$reset_color"
+        printf "%s%s%d%s" "$icon_charge" " battery " "$percent" "%"
     done && exit 0
   '';
 
   sb-datetime = pkgs.writeShellScriptBin "sb-datetime" ''
-      # Description: Script to get current date and time
-
-      source sb-colors
-
-      case $BLOCK_BUTTON in
-      1) wezterm start -- bash -c "date; exec bash";;
-      esac
-
-      printf "%s%s %s%s" "$text_color" "$(date '+%a, %H:%M')" "$reset_color" && exit 0
-  '';
-
-  sb-internet = pkgs.writeShellScriptBin "sb-internet" ''
-    # Description: Script to get wifi and ethernet status
+    # Description: Script to get current date and time
 
     source sb-colors
 
-    show_wname=false
-    show_ename=false
+    case $BLOCK_BUTTON in # TODO
+    1) exec code;;
+    esac
+
+    printf "%s" "$(date '+%a, %H:%M')" && exit 0
+  '';
+
+  sb-internet = pkgs.writeShellScriptBin "sb-internet" ''
+    # Description: Script to get Wi-Fi and Ethernet status
+    source sb-colors
 
     info="$(nmcli dev | grep 'wifi')"
-    echo "$info" | grep -wq 'connected' && icon_wifi="wifi" || icon_wifi=""
-    $show_wname && wname="$(echo "$info" | awk '$1=$2=$3=""; FNR == 1 {print $0};' | sed 's/^ *//g')"
+
+    if echo "$info" | grep -wq 'connected'; then
+        icon_wifi="wifi"
+    else
+        icon_wifi=""
+    fi
 
     info="$(nmcli dev | grep 'ethernet')"
-    echo "$info" | grep -wq 'connected' && icon_ethr="ethernet" || icon_ethr=""
-    $show_ename && ename="$(echo "$info" | awk '$1=$2=$3=""; FNR == 1 {print $0};' | sed 's/^ *//g')"
 
-    printf "%s%s" "$text_color" "$icon_wifi" && $show_wname && printf " %s" "$wname"
-    [ -n "$icon_ethr" ] && printf " %s%s" "$icon_ethr" && $show_ename && printf " %s" "$ename"
-    printf "%s" "$reset_color" && exit 0
+    if echo "$info" | grep -wq 'connected'; then
+        icon_ethr="ethernet"
+    else
+        icon_ethr=""
+    fi
+
+    if [ -n "$icon_wifi" ]; then
+        printf "$icon_wifi"
+    fi
+
+    if [ -n "$icon_ethr" ]; then
+        printf "$icon_ethr"
+    fi
+
+    exit 0
   '';
 
   sb-ram = pkgs.writeShellScriptBin "sb-ram" ''
-      # Description: Script to get ram usage
+    # Description: Script to get ram usage
 
-      source sb-colors
-      printf "%s%s %s%s" "$accent_color" "ram" "$text_color" "$(free -mh --si | grep '^Mem:' | awk '{print $3}')" "$reset_color" && exit 0
+    source sb-colors
+    printf "%s%s" "ram " "$(free -mh --si | grep '^Mem:' | awk '{print $3}')" && exit 0
   '';
 
   sb-volume = pkgs.writeShellScriptBin "sb-volume" ''
-      # Description: Script to get current volume
+    # Description: Script to get current volume
 
-      source sb-colors
+    source sb-colors
 
-      info="$(amixer get Master | grep '%' | head -n1)"
-      percent="$(echo "$info" | sed -E 's/.*\[(.*)%\].*/\1/')"
-
-      printf "%s%s %s%%%s" "$accent_color" "vol" "$text_color" "$percent" "$reset_color" && exit 0
+    percent="$(pulsemixer --get-volume | awk '{print $1}')"
+    printf "%s%d%s" "vol " "$percent" "%" && exit 0
   '';
 
   sb-colors = pkgs.writeShellScriptBin "sb-colors" ''
@@ -75,53 +84,106 @@ let
   '';
 
   nixconfig = pkgs.writeShellScriptBin "nixconfig" ''
-    if [ -z "$1" ]; then
-        echo "Usage: nixconfig <path-to-cloned-repo>"
-        exit 1
-    fi
+    flag_norebuild=false
+    flag_commit=false
+    flag_skipconf=false
+
+    while getopts "sfc:" option; do
+        case $option in
+            s)
+                flag_norebuild=true
+                ;;
+            f)
+                flag_skipconf=true
+                ;;
+            c)
+                flag_commit=$OPTARG
+                ;;
+            *)
+                echo "Usage: nixconfig [-s] [-f] [-c value]"
+                echo "  -s            don't rebuild"
+                echo "  -f            skip rebuild confirmations, rebuild both home-manager and nixos"
+                echo "  -c [value]    commit changes, value = path to cloned repo"
+                exit 1
+                ;;
+        esac
+    done
 
     REPO_PATH=$(realpath "$1")
 
-    if ! sudo code --wait /config --user-data-dir --no-sandbox; then
+    if ! code --wait /config; then
         echo "Error opening VS Code."
         exit 1
     fi
-    
-    if ! sudo rm -rf "$REPO_PATH"/*; then
-        echo "Error cleaning files in $REPO_PATH"
-        exit 1
+
+    if [ -d $REPO_PATH ]; then
+        if ! sudo rm -rf "$REPO_PATH"/*; then
+            echo "Error cleaning files in $REPO_PATH"
+            exit 1
+        fi
+
+        if ! sudo cp -r /config/* "$REPO_PATH"; then
+            echo "Error copying files to $REPO_PATH"
+            exit 1
+        fi
+
+        echo "copied to $REPO_PATH"
+
+        cd "$REPO_PATH" || { echo "Error changing directory to $REPO_PATH"; exit 1; }
+
+        if ! git add .; then
+            echo "Error adding files to git"
+            exit 1
+        fi
+
+        NIXOS_GENERATION=$(sudo nix-env --list-generations --profile /nix/var/nix/profiles/system | grep current | awk '{print $1}')
+
+        if ! git commit -m "Update configuration - $NIXOS_GENERATION"; then
+            echo "Error committing changes to git"
+            exit 1
+        fi
+
+        echo "succesfully commited"
     fi
 
-    if ! sudo cp -r /config/* "$REPO_PATH"; then
-        echo "Error copying files to $REPO_PATH"
-        exit 1
+    if [ flag_norebuild ]; then
+        echo "finished"
+        exit 0
     fi
 
-    cd "$REPO_PATH" || { echo "Error changing directory to $REPO_PATH"; exit 1; }
+    if $flag_skipconf; then
+        if ! sudo nixos-rebuild switch --flake /config; then
+            echo "Error rebuilding NixOS"
+            exit 1
+        fi
 
-    if ! sudo git add .; then
-        echo "Error adding files to git"
-        exit 1
+        if ! home-manager switch --flake /config; then
+            echo "Error rebuilding Home Manager"
+            exit 1
+        fi
+    else
+        read -p "Do you want to rebuild NixOS (y/yes to proceed)? " response
+        if [[ "$response" == "y" || "$response" == "yes" ]]; then
+            if ! sudo nixos-rebuild switch --flake /config; then
+                echo "Error rebuilding NixOS"
+                exit 1
+            fi
+        else
+            echo "Skipping NixOS rebuild."
+        fi
+
+        read -p "Do you want to rebuild Home Manager (y/yes to proceed)? " response
+        if [[ "$response" == "y" || "$response" == "yes" ]]; then
+            if ! home-manager switch --flake /config; then
+                echo "Error rebuilding Home Manager"
+                exit 1
+            fi
+        else
+            echo "Skipping Home Manager rebuild."
+        fi
     fi
 
-    NIXOS_GENERATION=$(sudo nix-env --list-generations --profile /nix/var/nix/profiles/system | grep current | awk '{print $1}')
-
-    if ! sudo git commit -m "Update configuration - $NIXOS_GENERATION"; then
-        echo "Error committing changes to git"
-        exit 1
-    fi
-
-    if ! sudo nixos-rebuild switch --flake /config; then
-        echo "error rebuilding nixos"
-        exit 1
-    fi
-
-    if ! home-manager switch --flake /config; then
-        echo "Error rebuilding home manager"
-        exit 1
-    fi
-
-    echo "Configuration successfully updated and committed."
+    echo "finished succesfully"
   '';
 
   nixrebuild = pkgs.writeShellScriptBin "nixrebuild" ''
@@ -141,10 +203,10 @@ let
                 flag_commit=$OPTARG
                 ;;
             *)
-                echo "Usage: $0 [-h] [-n] [-c value]"
-                echo "-h      no home rebuild"
-                echo "-n      no nixos rebuild"
-                echo "-c      commit changes"
+                echo "Usage: nixrebuild [-h] [-n] [-c value]"
+                echo "  -h            don't rebuild home-manager"
+                echo "  -n            don't rebuild nixos"
+                echo "  -c [value]    commit changes, value = path to cloned repo"
                 exit 1
                 ;;
         esac
@@ -164,19 +226,23 @@ let
             exit 1
         fi
 
+        echo "copied to $REPO_PATH"
+
         cd "$REPO_PATH" || { echo "Error changing directory to $REPO_PATH"; exit 1; }
 
-        if ! sudo git add .; then
+        if ! git add .; then
             echo "Error adding files to git"
             exit 1
         fi
 
         NIXOS_GENERATION=$(sudo nix-env --list-generations --profile /nix/var/nix/profiles/system | grep current | awk '{print $1}')
 
-        if ! sudo git commit -m "Update configuration - $NIXOS_GENERATION"; then
+        if ! git commit -m "Update configuration - $NIXOS_GENERATION"; then
             echo "Error committing changes to git"
             exit 1
         fi
+
+        echo "succesfully commited"
     fi
 
     if [ "$flag_nixos" = false ]; then
@@ -195,9 +261,70 @@ let
 
     echo "Finished"
   '';
+
+  dwmkeys = pkgs.writeShellScriptBin "dwmkeys" ''
+    echo "Modkey: WINDOWS_KEY"
+    echo ""
+    echo "Open program                                          q"
+    echo "Open terminal                                 shift + q"
+    echo ""    
+    echo "increase master                                       m"
+    echo "decrease master                               shift + m"
+    echo "increase mfactor                                      n"
+    echo "decrease mfactor                              shift + n"
+    echo ""
+    echo "Toggle bar                                  shift + tab"
+    echo "set master window                                     a"
+    echo "switch to last tag                                  tab"
+    echo "kill window                                   shift + c"
+    echo ""
+    echo "next tag ->                                           d"
+    echo "next tag <-                                           s"
+    echo "next tag and move focused window ->           shift + d"
+    echo "next tag and move focused window <-           shift + s"
+    echo ""
+    echo "increase focused opacity                              b"
+    echo "decrease focused opacity                              v"
+    echo "increase unfocused opacity                    shift + b"
+    echo "decrease unfocused opacity                    shift + v"
+    echo ""
+    echo "tabbed layout                                         z"
+    echo "fullscreen layout                                     x"
+    echo "floating layout                                   space"
+    echo "toggle window floating                    shift + space"
+    echo ""
+    echo "change focused monitor ->                            ,"
+    echo "change focused monitor <-                    shift + ,"
+    echo "change tagged monitor ->                             ."
+    echo "change tagged monitor <-                     shift + ."
+    echo ""
+    echo "select only this tag                                1-9"
+    echo "add this tag to selection                 control + 1-9"
+    echo "assign window to only this tag              shift + 1-9"
+    echo "assign window to this tag         control + shift + 1-9"
+    echo "select all tags                                       0"
+    echo "assign window to all tags                     shift + 0"
+  '';
+
+  startup = pkgs.writeShellScriptBin "startup" ''
+    export PATH=${pkgs.nix}/bin:${pkgs.dwmblocks}/bin:${pkgs.dwm}/bin:${pkgs.dwmblocks}/bin:${pkgs.flameshot}/bin:/run/current-system/sw/bin:$PATH
+    dwmblocks &
+    flameshot &
+  '';
 in
 {
+  systemd.user.services.startup-script = {
+    enable = true;
+    description = "startup script";
+    wantedBy = [ "graphical-session.target" ];
+    serviceConfig = {
+        ExecStart = "${startup}/bin/startup";
+        RemainAfterExit = true;
+    };
+  };
+
   environment.systemPackages = with pkgs; [
+    dwmkeys
     nixconfig
     nixrebuild
     sb-colors

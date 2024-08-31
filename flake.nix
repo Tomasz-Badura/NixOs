@@ -20,6 +20,15 @@
     inherit (self) outputs;
   in 
   {
+    overlays = {
+      unstable-packages = final: _prev: {
+        unstable = import inputs.nixpkgs-unstable {
+          system = final.system;
+          config.allowUnfree = true;
+        };
+      };
+    };
+
     # sudo nixos-rebuild --flake /config
     nixosConfigurations = 
     {
