@@ -298,12 +298,12 @@ let
     echo "change tagged monitor ->                             ."
     echo "change tagged monitor <-                     shift + ."
     echo ""
-    echo "select only this tag                                1-9"
-    echo "add this tag to selection                 control + 1-9"
-    echo "assign window to only this tag              shift + 1-9"
-    echo "assign window to this tag         control + shift + 1-9"
-    echo "select all tags                                       0"
-    echo "assign window to all tags                     shift + 0"
+    echo "select only this tag                               1-9"
+    echo "add this tag to selection                control + 1-9"
+    echo "assign window to only this tag             shift + 1-9"
+    echo "assign window to this tag        control + shift + 1-9"
+    echo "select all tags                                      0"
+    echo "assign window to all tags                    shift + 0"
   '';
 
   startup = pkgs.writeShellScriptBin "startup" ''

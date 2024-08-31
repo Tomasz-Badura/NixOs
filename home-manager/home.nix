@@ -86,7 +86,7 @@
             enable = true;
             settings = {
                 styles = {
-                    theme = "default-light";
+                    theme = "nord-light";
                 };
             };
         };

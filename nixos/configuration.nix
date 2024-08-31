@@ -21,6 +21,8 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.stable; 
+
   time.timeZone = "Europe/Warsaw";
   i18n.defaultLocale = "en_US.UTF-8";
 
@@ -67,6 +69,8 @@
           y = 1080;
         }
       ];
+      
+      videoDrivers = [ "nvidia" ];
       excludePackages = [ pkgs.xterm ];
     };
 
