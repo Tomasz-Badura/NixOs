@@ -11,8 +11,6 @@
 
     spicetify-nix.url = "github:Gerg-L/spicetify-nix";
     spicetify-nix.inputs.nixpkgs.follows = "nixpkgs";
-
-    xremap-flake.url = "github:xremap/nix-flake";
   };
 
   outputs = { self, nixpkgs, home-manager, ... } @ inputs: 

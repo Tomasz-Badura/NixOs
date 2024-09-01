@@ -21,7 +21,28 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.stable; 
+  hardware = {
+    nvidia = {
+      modesetting.enable = true;
+      powerManagement.enable = false;
+      powerManagement.finegrained = true;
+      open = false;
+      nvidiaSettings = true;
+      prime = {
+        offload.enable = true;
+        offload.enableOffloadCmd = true;
+        intelBusId = "PCI:0:2:0";
+        nvidiaBusId = "PCI:1:0:0";
+      };
+
+      package = config.boot.kernelPackages.nvidiaPackages.stable;
+    };
+
+    opengl.enable = true;
+    uinput.enable = true;
+    opentabletdriver.enable = true;
+    opentabletdriver.daemon.enable = true;
+  };
 
   time.timeZone = "Europe/Warsaw";
   i18n.defaultLocale = "en_US.UTF-8";
@@ -45,7 +66,7 @@
       dwm = super.dwm.overrideAttrs (oldattrs: {
         src = fetchGit {
           url = "https://github.com/Tomasz-Badura/dwm-config.git";
-          rev = "72916fbd5670e199ed599ca114954542b0284c59";
+          rev = "c26c7d53265510c537daecbc3f6f7a2819512aa0";
         };
       });
 
@@ -69,7 +90,7 @@
           y = 1080;
         }
       ];
-      
+
       videoDrivers = [ "nvidia" ];
       excludePackages = [ pkgs.xterm ];
     };
@@ -212,9 +233,6 @@
 
   # didn't know where to logically put these lmao
   virtualisation.docker.enable = true;
-  hardware.uinput.enable = true;
-  hardware.opentabletdriver.enable = true;
-  hardware.opentabletdriver.daemon.enable = true;
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   system.stateVersion = "24.05";

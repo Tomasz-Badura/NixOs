@@ -10,7 +10,6 @@
 {
   imports = [
     inputs.spicetify-nix.homeManagerModules.default
-    inputs.xremap-flake.homeManagerModules.default
   ];
 
   nixpkgs = {
@@ -120,25 +119,12 @@
         use-damage = true;
       };
     };
-
-    xremap = {
-      withX11 = true;
-      yamlConfig = ''
-        modmap
-        - name: global modmap
-        remap:
-          - shortcut: { win: "R" }
-            command: "prompt 'Reboot system?' 'sudo reboot'"
-        keymap
-        - name: global keymap
-      '';
-    };
   };
 
   xdg.mimeApps = {
     enable = true;
     defaultApplications = {
-      "text/plain" = [ "notepad" ];
+      "text/plain" = [ "userapp-notepad-OZXNT2.desktop" ];
       "image/jpeg" = [ "feh.desktop" ];
       "image/png" = [ "feh.desktop" ];
       "image/gif" = [ "feh.desktop" ];
