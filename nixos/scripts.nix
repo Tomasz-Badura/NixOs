@@ -311,6 +311,10 @@ let
     dwmblocks &
     flameshot &
   '';
+
+  prompt = pkgs.writeShellScriptBin "prompt" ''
+    [ $(echo -e "No\nYes" | dmenu -p "$i") == "Yes" ] && $2
+  '';
 in
 {
   systemd.user.services.startup-script = {
@@ -324,6 +328,7 @@ in
   };
 
   environment.systemPackages = with pkgs; [
+    prompt
     dwmkeys
     nixconfig
     nixrebuild
