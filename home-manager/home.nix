@@ -94,7 +94,7 @@
     };
 
     bash = {
-      initExtra = ''
+      bashrcExtra = ''
         eval $(ssh-agent -s)
         ssh-add ~/.ssh/gitssh
         ssh -T git@github.com

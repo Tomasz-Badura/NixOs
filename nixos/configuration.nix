@@ -110,8 +110,16 @@
       };
     };
 
-    displayManager.autoLogin.enable = true;
-    displayManager.autoLogin.user = "terminator";
+    openssh = {
+      enable = true;
+      permitRootLogin = "yes";
+      passwordAuthentication = true;
+    };
+
+    displayManager.autoLogin = {
+      enable = true;
+      user = "terminator";
+    };
   };
 
   hardware.pulseaudio.enable = true;
