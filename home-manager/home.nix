@@ -54,8 +54,7 @@
     nixfmt-rfc-style # nix formatter
     sxhkd # hotkeys
     unstable.wine # running windows apps
-    adwaita-icon-theme # icons
-    
+
     # TODO DAW
 
     (lutris.override {
