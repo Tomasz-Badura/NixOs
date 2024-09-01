@@ -38,8 +38,11 @@
       package = config.boot.kernelPackages.nvidiaPackages.stable;
     };
 
-    opengl.enable = true;
     uinput.enable = true;
+    
+    opengl.enable = true;
+    opengl.driSupport32Bit = true;
+
     opentabletdriver.enable = true;
     opentabletdriver.daemon.enable = true;
   };
@@ -66,7 +69,7 @@
       dwm = super.dwm.overrideAttrs (oldattrs: {
         src = fetchGit {
           url = "https://github.com/Tomasz-Badura/dwm-config.git";
-          rev = "ab91c88e4a9e6aa1aaa62db2f96783f61a19e092";
+          rev = "ebcdda2a08143e6b40e20ad1780a24b88ee0c0f6";
         };
       });
 
@@ -113,8 +116,14 @@
     openssh = {
       enable = true;
       settings = {
-        permitRootLogin = "yes";
-        passwordAuthentication = true;
+        PermitRootLogin = "no";
+        PasswordAuthentication = false;
+        PubkeyAuthentication = true;
+        PermitEmptyPasswords = false;
+        MaxAuthTries = 3;
+        ClientAliveInterval = 300;
+        ClientAliveCountMax = 2;
+        port = 32;
       };
     };
 
@@ -122,6 +131,8 @@
       enable = true;
       user = "terminator";
     };
+
+    fail2ban.enable = true;
   };
 
   hardware.pulseaudio.enable = true;
@@ -130,6 +141,8 @@
     hostName = "TERMINATOR";
     enableIPv6 = false;
     networkmanager.enable = true;
+    firewall.enable = true;
+    firewall.allowedTCPPorts = [ 32 ];
   };
 
   users.users.terminator = {
@@ -142,6 +155,7 @@
       "uinput"
       "input"
     ];
+    openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHZiSMswBK0/ithgyMfg5YKMadOTW+ys9zoQxWEPlf/k tomaszbadurakontakt@gmail.com" ];
   };
 
   programs = {
@@ -155,6 +169,8 @@
       remotePlay.openFirewall = true;
       dedicatedServer.openFirewall = true;
     };
+
+    ssh.forwardX11 = true;
   };
 
   fonts = {
@@ -216,6 +232,7 @@
   nixpkgs.config.allowUnfree = true;
 
   environment.systemPackages = with pkgs; [
+    fail2ban
     libinput
     neovim
     vim
@@ -236,8 +253,7 @@
     home-manager
     mate.mate-polkit
     gnumake
-    gcc
-    wine
+    gcc    
     unstable.opentabletdriver
   ];
 

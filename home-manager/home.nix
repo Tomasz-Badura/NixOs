@@ -53,12 +53,15 @@
     unstable.lenovo-legion # lenovo legion toolkit alternative
     nixfmt-rfc-style # nix formatter
     sxhkd # hotkeys
+    unstable.wine # running windows apps
+    adwaita-icon-theme # icons
+    
     # TODO DAW
 
     (lutris.override {
       extraPkgs = pkgs: [
-        wineWowPackages.stable
-        winetricks
+        unstable.wineWowPackages.unstableFull
+        unstable.winetricks
       ];
     }) # gaming platform
   ];
