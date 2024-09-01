@@ -52,6 +52,7 @@
     unstable.lazydocker # docker desktop alternative cli
     unstable.lenovo-legion # lenovo legion toolkit alternative
     nixfmt-rfc-style # nix formatter
+    sxhkd # hotkeys
     # TODO DAW
 
     (lutris.override {
@@ -92,6 +93,14 @@
       userName = "Tomasz-Badura";
     };
 
+    bash = {
+      initExtra = ''
+        eval $(ssh-agent -s)
+        ssh-add ~/.ssh/gitssh
+        ssh -T git@github.com
+      ''; 
+    };
+
     spicetify = {
       enable = true;
       enabledExtensions = with inputs.spicetify-nix.legacyPackages.${pkgs.system}.extensions; [
@@ -117,6 +126,14 @@
           deviation = 2;
         };
         use-damage = true;
+      };
+    };
+    
+    sxhkd = {
+      enable = true;
+      keybindings = {
+        "mod4 + r" = pkgs.writeShellScript "reboot" "prompt 'Reboot?' 'reboot'";
+        "mod4 + shift + r" = pkgs.writeShellScript "shutdown" "prompt 'Shutdown?' 'shutdown 0'";
       };
     };
   };

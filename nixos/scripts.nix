@@ -190,27 +190,46 @@ let
     flag_home=false
     flag_nixos=false
     flag_commit=""
+    flag_flake_update=false
+    options_set=false
 
-    while getopts "hnc:" option; do
+    while getopts "c:fhn" option; do
         case $option in
+            c)
+                flag_commit=$OPTARG
+                options_set=true
+                ;;
+            f)
+                flag_flake_update=true
+                options_set=true
+                ;;
             h)
                 flag_home=true
+                options_set=true
                 ;;
             n)
                 flag_nixos=true
-                ;;
-            c)
-                flag_commit=$OPTARG
+                options_set=true
                 ;;
             *)
-                echo "Usage: nixrebuild [-h] [-n] [-c value]"
-                echo "  -h            don't rebuild home-manager"
-                echo "  -n            don't rebuild nixos"
+                echo "Usage: nixrebuild [-c value] [-f] [-n] [-h]"
                 echo "  -c [value]    commit changes, value = path to cloned repo"
+                echo "  -f            run 'nix flake update'"
+                echo "  -n            rebuild nixos"
+                echo "  -h            rebuild home-manager"
                 exit 1
                 ;;
         esac
     done
+
+    if [ "$options_set" = false ]; then
+        echo "Usage: nixrebuild [-c value] [-f] [-n] [-h]"
+        echo "  -c [value]    commit changes, value = path to cloned repo"
+        echo "  -f            run 'nix flake update'"
+        echo "  -n            rebuild nixos"
+        echo "  -h            rebuild home-manager"
+        exit 1
+    fi
 
     shift $((OPTIND - 1))
     REPO_PATH=$(realpath "$flag_commit")
@@ -242,17 +261,24 @@ let
             exit 1
         fi
 
-        echo "succesfully commited"
+        echo "successfully committed"
     fi
 
-    if [ "$flag_nixos" = false ]; then
+    if [ "$flag_flake_update" = true ]; then
+        if ! nix flake update; then
+            echo "Error running nix flake update"
+            exit 1
+        fi
+    fi
+
+    if [ "$flag_nixos" = true ]; then
         if ! sudo nixos-rebuild switch --flake /config; then
             echo "Error rebuilding NixOS"
             exit 1
         fi
     fi
 
-    if [ "$flag_home" = false ]; then
+    if [ "$flag_home" = true ]; then
         if ! home-manager switch --flake /config; then
             echo "Error rebuilding home manager"
             exit 1
@@ -307,13 +333,15 @@ let
   '';
 
   startup = pkgs.writeShellScriptBin "startup" ''
-    export PATH=${pkgs.nix}/bin:${pkgs.dwmblocks}/bin:${pkgs.dwm}/bin:${pkgs.dwmblocks}/bin:${pkgs.flameshot}/bin:/run/current-system/sw/bin:$PATH
-    dwmblocks &
-    flameshot &
+    export PATH=${pkgs.nix}/bin:/run/current-system/sw/bin:$PATH
+
+    ${pkgs.dwmblocks}/bin/dwmblocks &
+    ${pkgs.flameshot}/bin/flameshot &
+    ${pkgs.sxhkd}/bin/sxhkd &
   '';
 
   prompt = pkgs.writeShellScriptBin "prompt" ''
-    [ $(echo -e "No\nYes" | dmenu -p "$i") == "Yes" ] && $2
+    [ $(echo -e "No\nYes" | dmenu -fn 'Ubuntu Mono derivative Powerline:size=11' -nb '#FFFFFF' -nf '#000000' -sb '#FFB6FC' -sf '#000000' -i -p "$1") == "Yes" ] && $2
   '';
 in
 {
@@ -322,8 +350,8 @@ in
     description = "startup script";
     wantedBy = [ "graphical-session.target" ];
     serviceConfig = {
-        ExecStart = "${startup}/bin/startup";
-        RemainAfterExit = true;
+      ExecStart = "${startup}/bin/startup";
+      RemainAfterExit = true;
     };
   };
 
