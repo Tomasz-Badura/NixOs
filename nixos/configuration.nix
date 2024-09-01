@@ -112,8 +112,10 @@
 
     openssh = {
       enable = true;
-      permitRootLogin = "yes";
-      passwordAuthentication = true;
+      settings = {
+        permitRootLogin = "yes";
+        passwordAuthentication = true;
+      };
     };
 
     displayManager.autoLogin = {
