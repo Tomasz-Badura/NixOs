@@ -169,8 +169,6 @@
       remotePlay.openFirewall = true;
       dedicatedServer.openFirewall = true;
     };
-
-    ssh.forwardX11 = true;
   };
 
   fonts = {

@@ -49,12 +49,12 @@
     unstable.kdePackages.kdenlive # video editor
     unstable.glaxnimate # kdenlive dependency
     audacity # audio recorder and editor
-    unstable.lazydocker # docker desktop alternative cli
+    unstable.lazydocker # docker desktop alternative tui
     unstable.lenovo-legion # lenovo legion toolkit alternative
     nixfmt-rfc-style # nix formatter
     sxhkd # hotkeys
     unstable.wine # running windows apps
-
+    nvtopPackages.full # nvidia monitoring tui
     # TODO DAW
 
     (lutris.override {
@@ -96,6 +96,7 @@
     };
 
     bash = {
+      enable = true;
       bashrcExtra = ''
         eval $(ssh-agent -s)
         ssh-add ~/.ssh/gitssh
