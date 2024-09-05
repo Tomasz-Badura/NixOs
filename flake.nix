@@ -1,8 +1,7 @@
 {
   description = "NixOs config";
 
-  inputs = 
-  {
+  inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
@@ -13,39 +12,45 @@
     spicetify-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, home-manager, ... } @ inputs: 
-  let
-    inherit (self) outputs;
-  in 
-  {
-    overlays = {
-      unstable-packages = final: _prev: {
-        unstable = import inputs.nixpkgs-unstable {
-          system = final.system;
-          config.allowUnfree = true;
+  outputs =
+    {
+      self,
+      nixpkgs,
+      home-manager,
+      ...
+    }@inputs:
+    let
+      inherit (self) outputs;
+    in
+    {
+      overlays = {
+        unstable-packages = final: _prev: {
+          unstable = import inputs.nixpkgs-unstable {
+            system = final.system;
+            config.allowUnfree = true;
+          };
+        };
+      };
+
+      # sudo nixos-rebuild --flake /config
+      nixosConfigurations = {
+        TERMINATOR = nixpkgs.lib.nixosSystem {
+          specialArgs = {
+            inherit inputs outputs;
+          };
+          modules = [ ./nixos/configuration.nix ];
+        };
+      };
+
+      # sudo home-manager --flake /config#terminator@TERMINATOR
+      homeConfigurations = {
+        "terminator@TERMINATOR" = home-manager.lib.homeManagerConfiguration {
+          pkgs = nixpkgs.legacyPackages.x86_64-linux;
+          extraSpecialArgs = {
+            inherit inputs outputs;
+          };
+          modules = [ ./home-manager/home.nix ];
         };
       };
     };
-
-    # sudo nixos-rebuild --flake /config
-    nixosConfigurations = 
-    {
-      TERMINATOR = nixpkgs.lib.nixosSystem 
-      {
-        specialArgs = {inherit inputs outputs;};
-        modules = [./nixos/configuration.nix];
-      };
-    };
-
-    # sudo home-manager --flake /config#terminator@TERMINATOR
-    homeConfigurations = 
-    {
-      "terminator@TERMINATOR" = home-manager.lib.homeManagerConfiguration 
-      {
-        pkgs = nixpkgs.legacyPackages.x86_64-linux;
-        extraSpecialArgs = {inherit inputs outputs;};
-        modules = [./home-manager/home.nix];
-      };
-    }; 
-  };
 }

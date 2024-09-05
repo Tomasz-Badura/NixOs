@@ -88,7 +88,7 @@ let
     flag_commit=false
     flag_skipconf=false
 
-    while getopts "sfc:" option; do
+    while getopts "sfc" option; do
         case $option in
             s)
                 flag_norebuild=true
@@ -97,53 +97,57 @@ let
                 flag_skipconf=true
                 ;;
             c)
-                flag_commit=$OPTARG
+                flag_commit=true
                 ;;
             *)
                 echo "Usage: nixconfig [-s] [-f] [-c value]"
                 echo "  -s            don't rebuild"
                 echo "  -f            skip rebuild confirmations, rebuild both home-manager and nixos"
-                echo "  -c [value]    commit changes, value = path to cloned repo"
+                echo "  -c            commit changes, requires cloned repo at ~/config"
                 exit 1
                 ;;
         esac
     done
 
-    REPO_PATH=$(realpath "$1")
+    REPO_PATH="$HOME/config"
 
     if ! code --wait /config; then
         echo "Error opening VS Code."
         exit 1
     fi
 
-    if [ -d $REPO_PATH ]; then
-        if ! sudo rm -rf "$REPO_PATH"/*; then
-            echo "Error cleaning files in $REPO_PATH"
-            exit 1
+    if $flag_commit; then
+        if [ -d "$REPO_PATH" ]; then
+            if ! find "$REPO_PATH" -mindepth 1 -maxdepth 1 ! -name '.*' -exec rm -rf {} +; then
+                echo "Error cleaning files in $REPO_PATH"
+                exit 1
+            fi
+
+            if ! sudo cp -r /config/* "$REPO_PATH"; then
+                echo "Error copying files to $REPO_PATH"
+                exit 1
+            fi
+
+            echo "copied to $REPO_PATH"
+
+            cd "$REPO_PATH" || { echo "Error changing directory to $REPO_PATH"; exit 1; }
+
+            if ! git add .; then
+                echo "Error adding files to git"
+                exit 1
+            fi
+
+            NIXOS_GENERATION=$(sudo nix-env --list-generations --profile /nix/var/nix/profiles/system | grep current | awk '{print $1}')
+
+            if ! git commit -m "Update configuration - $NIXOS_GENERATION"; then
+                echo "Error committing changes to git"
+                exit 1
+            fi
+
+            echo "succesfully commited"
+        else
+            echo "skipping commit"
         fi
-
-        if ! sudo cp -r /config/* "$REPO_PATH"; then
-            echo "Error copying files to $REPO_PATH"
-            exit 1
-        fi
-
-        echo "copied to $REPO_PATH"
-
-        cd "$REPO_PATH" || { echo "Error changing directory to $REPO_PATH"; exit 1; }
-
-        if ! git add .; then
-            echo "Error adding files to git"
-            exit 1
-        fi
-
-        NIXOS_GENERATION=$(sudo nix-env --list-generations --profile /nix/var/nix/profiles/system | grep current | awk '{print $1}')
-
-        if ! git commit -m "Update configuration - $NIXOS_GENERATION"; then
-            echo "Error committing changes to git"
-            exit 1
-        fi
-
-        echo "succesfully commited"
     fi
 
     if [ flag_norebuild ]; then
@@ -152,6 +156,11 @@ let
     fi
 
     if $flag_skipconf; then
+        if ! sudo nix flake update /config; then
+            echo "Error updating flakes"
+            exit 1
+        fi
+
         if ! sudo nixos-rebuild switch --flake /config; then
             echo "Error rebuilding NixOS"
             exit 1
@@ -162,6 +171,16 @@ let
             exit 1
         fi
     else
+        read -p "Do you want to update flakes (y/yes to proceed)? " response
+        if [[ "$response" == "y" || "$response" == "yes" ]]; then
+            if ! sudo nix flake update /config; then
+                echo "Error updating flakes"
+                exit 1
+            fi
+        else
+            echo "Skipping updating flakes."
+        fi
+
         read -p "Do you want to rebuild NixOS (y/yes to proceed)? " response
         if [[ "$response" == "y" || "$response" == "yes" ]]; then
             if ! sudo nixos-rebuild switch --flake /config; then
@@ -179,7 +198,7 @@ let
                 exit 1
             fi
         else
-            echo "Skipping Home Manager rebuild."
+            echo "something went wrong, skipping commit (check if '$REPO_PATH' exists)"
         fi
     fi
 
@@ -189,14 +208,14 @@ let
   nixrebuild = pkgs.writeShellScriptBin "nixrebuild" ''
     flag_home=false
     flag_nixos=false
-    flag_commit=""
+    flag_commit=false
     flag_flake_update=false
     options_set=false
 
-    while getopts "c:fhn" option; do
+    while getopts "cfhn" option; do
         case $option in
             c)
-                flag_commit=$OPTARG
+                flag_commit=true
                 options_set=true
                 ;;
             f)
@@ -212,8 +231,8 @@ let
                 options_set=true
                 ;;
             *)
-                echo "Usage: nixrebuild [-c value] [-f] [-n] [-h]"
-                echo "  -c [value]    commit changes, value = path to cloned repo"
+                echo "Usage: nixrebuild [-c] [-f] [-n] [-h]"
+                echo "  -c            commit changes, requires cloned repo at ~/config"
                 echo "  -f            run 'nix flake update'"
                 echo "  -n            rebuild nixos"
                 echo "  -h            rebuild home-manager"
@@ -223,49 +242,52 @@ let
     done
 
     if [ "$options_set" = false ]; then
-        echo "Usage: nixrebuild [-c value] [-f] [-n] [-h]"
-        echo "  -c [value]    commit changes, value = path to cloned repo"
+        echo "Usage: nixrebuild [-c] [-f] [-n] [-h]"
+        echo "  -c            commit changes, requires cloned repo at ~/config"
         echo "  -f            run 'nix flake update'"
         echo "  -n            rebuild nixos"
         echo "  -h            rebuild home-manager"
         exit 1
     fi
 
-    shift $((OPTIND - 1))
-    REPO_PATH=$(realpath "$flag_commit")
+    REPO_PATH="$HOME/config"
 
-    if [ -d "$REPO_PATH" ]; then
-        if ! sudo rm -rf "$REPO_PATH"/*; then
-            echo "Error cleaning files in $REPO_PATH"
-            exit 1
+    if $flag_commit; then
+        if [ -d "$REPO_PATH" ]; then
+            if ! find "$REPO_PATH" -mindepth 1 -maxdepth 1 ! -name '.*' -exec rm -rf {} + ; then
+                echo "Error cleaning files in $REPO_PATH"
+                exit 1
+            fi
+
+            if ! sudo cp -r /config/* "$REPO_PATH"; then
+                echo "Error copying files to $REPO_PATH"
+                exit 1
+            fi
+
+            echo "copied to $REPO_PATH"
+
+            cd "$REPO_PATH" || { echo "Error changing directory to $REPO_PATH"; exit 1; }
+
+            if ! git add .; then
+                echo "Error adding files to git"
+                exit 1
+            fi
+
+            NIXOS_GENERATION=$(sudo nix-env --list-generations --profile /nix/var/nix/profiles/system | grep current | awk '{print $1}')
+
+            if ! git commit -m "Update configuration - $NIXOS_GENERATION"; then
+                echo "Error committing changes to git"
+                exit 1
+            fi
+
+            echo "successfully committed"
+        else
+            echo "something went wrong, skipping commit (check if '$REPO_PATH' exists)"
         fi
-
-        if ! sudo cp -r /config/* "$REPO_PATH"; then
-            echo "Error copying files to $REPO_PATH"
-            exit 1
-        fi
-
-        echo "copied to $REPO_PATH"
-
-        cd "$REPO_PATH" || { echo "Error changing directory to $REPO_PATH"; exit 1; }
-
-        if ! git add .; then
-            echo "Error adding files to git"
-            exit 1
-        fi
-
-        NIXOS_GENERATION=$(sudo nix-env --list-generations --profile /nix/var/nix/profiles/system | grep current | awk '{print $1}')
-
-        if ! git commit -m "Update configuration - $NIXOS_GENERATION"; then
-            echo "Error committing changes to git"
-            exit 1
-        fi
-
-        echo "successfully committed"
     fi
 
     if [ "$flag_flake_update" = true ]; then
-        if ! nix flake update; then
+        if ! nix flake update /config; then
             echo "Error running nix flake update"
             exit 1
         fi

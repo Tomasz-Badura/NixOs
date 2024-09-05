@@ -21,6 +21,18 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
+  fileSystems = {
+    "/win" = {
+      device = "dev/nvme0n1p3";
+      fsType = "ntfs";
+      options = [
+        "users"
+        "nofail"
+        "x-gvfs-show"
+      ];
+    };
+  };
+
   hardware = {
     nvidia = {
       modesetting.enable = true;
@@ -39,7 +51,7 @@
     };
 
     uinput.enable = true;
-    
+
     opengl.enable = true;
     opengl.driSupport32Bit = true;
 
@@ -155,7 +167,9 @@
       "uinput"
       "input"
     ];
-    openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHZiSMswBK0/ithgyMfg5YKMadOTW+ys9zoQxWEPlf/k tomaszbadurakontakt@gmail.com" ];
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHZiSMswBK0/ithgyMfg5YKMadOTW+ys9zoQxWEPlf/k tomaszbadurakontakt@gmail.com"
+    ];
   };
 
   programs = {
@@ -251,8 +265,9 @@
     home-manager
     mate.mate-polkit
     gnumake
-    gcc    
+    gcc
     unstable.opentabletdriver
+    xwallpaper
   ];
 
   # didn't know where to logically put these lmao

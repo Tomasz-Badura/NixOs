@@ -8,9 +8,7 @@
 }:
 
 {
-  imports = [
-    inputs.spicetify-nix.homeManagerModules.default
-  ];
+  imports = [ inputs.spicetify-nix.homeManagerModules.default ];
 
   nixpkgs = {
     overlays = [ outputs.overlays.unstable-packages ];
@@ -101,7 +99,7 @@
         eval $(ssh-agent -s)
         ssh-add ~/.ssh/gitssh
         ssh -T git@github.com
-      ''; 
+      '';
     };
 
     spicetify = {
@@ -131,7 +129,7 @@
         use-damage = true;
       };
     };
-    
+
     sxhkd = {
       enable = true;
       keybindings = {
