@@ -118,7 +118,7 @@ let
 
     if $flag_commit; then
         if [ -d "$REPO_PATH" ]; then
-            if ! find "$REPO_PATH" -mindepth 1 -maxdepth 1 ! -name '.*' -exec rm -rf {} +; then
+            if ! find "$REPO_PATH" -mindepth 1 -maxdepth 1 ! -name '.*' -exec sudo rm -rf {} +; then
                 echo "Error cleaning files in $REPO_PATH"
                 exit 1
             fi
@@ -254,7 +254,7 @@ let
 
     if $flag_commit; then
         if [ -d "$REPO_PATH" ]; then
-            if ! find "$REPO_PATH" -mindepth 1 -maxdepth 1 ! -name '.*' -exec rm -rf {} + ; then
+            if ! find "$REPO_PATH" -mindepth 1 -maxdepth 1 ! -name '.*' -exec sudo rm -rf {} + ; then
                 echo "Error cleaning files in $REPO_PATH"
                 exit 1
             fi
@@ -360,11 +360,46 @@ let
     ${pkgs.dwmblocks}/bin/dwmblocks &
     ${pkgs.flameshot}/bin/flameshot &
     ${pkgs.sxhkd}/bin/sxhkd &
+    ${wallpaper_slideshow}/bin/wallpaper_slideshow /config/wallpapers 20 &
   '';
 
   prompt = pkgs.writeShellScriptBin "prompt" ''
     [ $(echo -e "No\nYes" | dmenu -fn 'Ubuntu Mono derivative Powerline:size=11' -nb '#FFFFFF' -nf '#000000' -sb '#FFB6FC' -sf '#000000' -i -p "$1") == "Yes" ] && $2
   '';
+
+  wallpaper_slideshow = pkgs.writeShellScriptBin "wallpaper_slideshow" ''
+    if [ "$#" -ne 2 ]; then
+        echo "Usage: $0 <directory> <interval_in_seconds>"
+        exit 1
+    fi
+
+    DIRECTORY=$1
+    INTERVAL=$2
+
+    if [ ! -d "$DIRECTORY" ]; then
+        echo "Directory $DIRECTORY does not exist."
+        exit 1
+    fi
+
+    set_random_wallpaper() {
+        WALLPAPERS=("$DIRECTORY"/*)
+        
+        if [ '''$'''{#WALLPAPERS[@]} -eq 0 ]; then
+            echo "No files found in the directory $DIRECTORY."
+            exit 1
+        fi
+
+        RANDOM_WALLPAPER='''$'''{WALLPAPERS[RANDOM % '''$'''{#WALLPAPERS[@]}]}
+
+        xwallpaper --focus "$RANDOM_WALLPAPER"
+    }
+
+    while true; do
+        set_random_wallpaper
+        sleep "$INTERVAL"
+    done
+  '';
+
 in
 {
   systemd.user.services.startup-script = {
@@ -378,6 +413,7 @@ in
   };
 
   environment.systemPackages = with pkgs; [
+    wallpaper_slideshow
     prompt
     dwmkeys
     nixconfig
