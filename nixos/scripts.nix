@@ -360,7 +360,7 @@ let
     ${pkgs.dwmblocks}/bin/dwmblocks &
     ${pkgs.flameshot}/bin/flameshot &
     ${pkgs.sxhkd}/bin/sxhkd &
-    ${wallpaper_slideshow}/bin/wallpaper_slideshow /config/wallpapers 20 &
+    ${wallpaper_slideshow}/bin/wallpaper_slideshow "/config/wallpapers" "20" &
   '';
 
   prompt = pkgs.writeShellScriptBin "prompt" ''
