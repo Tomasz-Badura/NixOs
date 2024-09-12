@@ -88,7 +88,7 @@
       dwmblocks = super.dwmblocks.overrideAttrs (oldattrs: {
         src = fetchGit {
           url = "https://github.com/Tomasz-Badura/dwmblocks-config.git";
-          rev = "b2dd1af99e14220cd73a1555f076dfb51e9e2fd8";
+          rev = "da2d02c8992dd2bd8652f80767f7f89fcb294084";
         };
       });
     })
@@ -255,6 +255,7 @@
     dwm
     dwmblocks
     wget
+    fzf
     powershell
     git
     unzip

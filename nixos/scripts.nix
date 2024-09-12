@@ -83,6 +83,13 @@ let
     reset_color="^d^"  # Reset color
   '';
 
+  sb-brightness = pkgs.writeShellScriptBin "sb-brightness" ''
+    a=$(${pkgs.brightnessctl}/bin/brightnessctl get)
+    b=$(${pkgs.brightnessctl}/bin/brightnessctl max)
+    brightness=$(awk "BEGIN {printf \"%.0f\", $a / ($b / 100)}")
+    printf "bright $brightness%%"
+  '';
+
   nixconfig = pkgs.writeShellScriptBin "nixconfig" ''
     flag_norebuild=false
     flag_commit=false
@@ -355,12 +362,12 @@ let
   '';
 
   startup = pkgs.writeShellScriptBin "startup" ''
-    export PATH=${pkgs.nix}/bin:/run/current-system/sw/bin:$PATH
+    export PATH=${pkgs.nix}/bin:/run/current-system/sw/bin:${pkgs.brightnessctl}/bin:$PATH
 
     ${pkgs.dwmblocks}/bin/dwmblocks &
     ${pkgs.flameshot}/bin/flameshot &
     ${pkgs.sxhkd}/bin/sxhkd &
-    ${wallpaper_slideshow}/bin/wallpaper_slideshow "/config/wallpapers" "20" &
+    ${wallpaper_slideshow}/bin/wallpaper_slideshow "/home/terminator/wallpapers" "20" &
   '';
 
   prompt = pkgs.writeShellScriptBin "prompt" ''
@@ -369,37 +376,37 @@ let
 
   wallpaper_slideshow = pkgs.writeShellScriptBin "wallpaper_slideshow" ''
     if [ "$#" -ne 2 ]; then
-        echo "Usage: $0 <directory> <interval_in_seconds>"
+        echo "Usage: $0 <directory> <interval>"
         exit 1
     fi
 
-    DIRECTORY=$1
-    INTERVAL=$2
+    DIRECTORY="$1"
+    INTERVAL="$2"
 
     if [ ! -d "$DIRECTORY" ]; then
-        echo "Directory $DIRECTORY does not exist."
+        echo "Error: Directory '$DIRECTORY' does not exist."
+        exit 1
+    fi
+
+    FILES=($(ls "$DIRECTORY" | grep -E '\.(jpg|png|jpeg)$'))
+
+    if [ ''${#FILES[@]} -eq 0 ]; then
+        echo "No image files found in directory '$DIRECTORY'."
         exit 1
     fi
 
     set_random_wallpaper() {
-        WALLPAPERS=("$DIRECTORY"/*)
-        
-        if [ '''$'''{#WALLPAPERS[@]} -eq 0 ]; then
-            echo "No files found in the directory $DIRECTORY."
-            exit 1
-        fi
-
-        RANDOM_WALLPAPER='''$'''{WALLPAPERS[RANDOM % '''$'''{#WALLPAPERS[@]}]}
-
-        xwallpaper --focus "$RANDOM_WALLPAPER"
+        local random_file="''${FILES[''$RANDOM % ''${#FILES[@]}]}"
+        xwallpaper --zoom "$DIRECTORY/$random_file"
     }
 
+    set_random_wallpaper
+
     while true; do
-        set_random_wallpaper
         sleep "$INTERVAL"
+        set_random_wallpaper
     done
   '';
-
 in
 {
   systemd.user.services.startup-script = {
@@ -419,6 +426,7 @@ in
     nixconfig
     nixrebuild
     sb-colors
+    sb-brightness
     sb-battery
     sb-datetime
     sb-internet

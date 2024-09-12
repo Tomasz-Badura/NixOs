@@ -42,6 +42,7 @@
         };
       };
 
+      # home-manager --flake /config
       # sudo home-manager --flake /config#terminator@TERMINATOR
       homeConfigurations = {
         "terminator@TERMINATOR" = home-manager.lib.homeManagerConfiguration {

@@ -52,6 +52,7 @@
     nixfmt-rfc-style # nix formatter
     sxhkd # hotkeys
     unstable.wine # running windows apps
+    brightnessctl # brightness control
     nvtopPackages.full # nvidia monitoring tui
     # TODO DAW
 
@@ -98,7 +99,7 @@
       bashrcExtra = ''
         eval $(ssh-agent -s)
         ssh-add ~/.ssh/gitssh
-        ssh -T git@github.com
+        clear
       '';
     };
 
@@ -120,14 +121,13 @@
     picom = {
       enable = true;
       backend = "glx";
-      settings = {
-        blur = {
-          method = "dual_kawase";
-          size = 1;
-          deviation = 2;
-        };
-        use-damage = true;
-      };
+      # settings = {
+      #   blur = {
+      #     method = "dual_kawase";
+      #     size = 1;
+      #     deviation = 2;
+      #   };
+      # };
     };
 
     sxhkd = {
@@ -135,6 +135,8 @@
       keybindings = {
         "mod4 + r" = pkgs.writeShellScript "reboot" "prompt 'Reboot?' 'reboot'";
         "mod4 + shift + r" = pkgs.writeShellScript "shutdown" "prompt 'Shutdown?' 'shutdown 0'";
+        "mod4 + l" = pkgs.writeShellScript "lowerbrightness" "brightnessctl set 5%-; pkill -RTMIN+12 dwmblocks;";
+        "mod4 + shift + l" = pkgs.writeShellScript "increasebrightness" "brightnessctl set 5%+; pkill -RTMIN+12 dwmblocks;";
       };
     };
   };
