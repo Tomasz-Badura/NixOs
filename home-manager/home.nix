@@ -28,7 +28,7 @@
     microsoft-edge # browser
     google-chrome # browser
     pcmanfm # file explorer
-    (lib.hiPrio unstable.bottom) # system monitor cli
+    unstable.btop # system monitor tui
     steam # game launcher
     vesktop # discord
     krita # painting program
@@ -79,14 +79,14 @@
       '';
     };
 
-    bottom = {
-      enable = true;
-      settings = {
-        styles = {
-          theme = "nord-light";
-        };
-      };
-    };
+    # bottom = {
+    #   enable = true;
+    #   settings = {
+    #     styles = {
+    #       theme = "nord-light";
+    #     };
+    #   };
+    # };
 
     git = {
       enable = true;
