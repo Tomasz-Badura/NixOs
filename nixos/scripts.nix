@@ -21,7 +21,7 @@ let
 
     source sb-colors
 
-    case "$BLOCK_BUTTON" in
+    case "$BUTTON" in
         1)
             echo "Button 1 pressed" >> "/home/terminator/test"
         ;;
@@ -42,31 +42,18 @@ let
   sb-internet = pkgs.writeShellScriptBin "sb-internet" ''
     # Description: Script to get Wi-Fi and Ethernet status
     source sb-colors
+    icon_wifi=""
+    icon_ethr=""
 
-    info="$(nmcli dev | grep 'wifi')"
-
-    if echo "$info" | grep -wq 'connected'; then
+    if nmcli dev | grep -q 'wifi.*connected'; then
         icon_wifi="wifi"
-    else
-        icon_wifi=""
     fi
 
-    info="$(nmcli dev | grep 'ethernet')"
-
-    if echo "$info" | grep -wq 'connected'; then
+    if nmcli dev | grep -q 'ethernet.*connected'; then
         icon_ethr="ethernet"
-    else
-        icon_ethr=""
     fi
 
-    if [ -n "$icon_wifi" ]; then
-        printf "$icon_wifi"
-    fi
-
-    if [ -n "$icon_ethr" ]; then
-        printf "$icon_ethr"
-    fi
-
+    printf "%s%s\n" "$icon_wifi" "$icon_ethr"
     exit 0
   '';
 
@@ -96,16 +83,16 @@ let
 
   sb-nixstoresize = pkgs.writeShellScriptBin "sb-nixstoresize" ''
     # Description: Script to get the size in GB of the /nix/store directory
-    
-    du -sm /nix/store | awk '{size=$1/1000; printf "Nix store: %.2f GB\n", size}' &
-    exit 0
+
+    size=$(du -sm /nix/store | awk '{size=$1/1000; printf "%.2f", size}')
+    printf "Nix store: $size GB" && exit 0
   '';
 
   sb-homesize = pkgs.writeShellScriptBin "sb-homesize" ''
     # Description: Script to get the size in GB of the /home directory
-    
-    du -sm /home | awk '{size=$1/1000; printf "Home: %.2f GB\n", size}' &
-    exit 0
+
+    size=$(du -sm /home | awk '{size=$1/1000; printf "%.2f", size}')
+    printf "Home: $size GB" && exit 0
   '';
 
   sb-brightness = pkgs.writeShellScriptBin "sb-brightness" ''
