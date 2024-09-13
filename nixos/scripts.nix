@@ -117,6 +117,8 @@ let
     printf "bright $brightness%%" && exit 0
   '';
 
+  # todo nixshell 
+
   nixconfig = pkgs.writeShellScriptBin "nixconfig" ''
     flag_norebuild=false
     flag_commit=false
@@ -243,15 +245,14 @@ let
     flag_home=false
     flag_nixos=false
     flag_commit=false
+    flag_push=false
     flag_flake_update=false
+    flag_optimise=false
+    flag_garbage_collect=false
     options_set=false
 
-    while getopts "cfhn" option; do
+    while getopts "fnhcpgo" option; do
         case $option in
-            c)
-                flag_commit=true
-                options_set=true
-                ;;
             f)
                 flag_flake_update=true
                 options_set=true
@@ -264,12 +265,31 @@ let
                 flag_nixos=true
                 options_set=true
                 ;;
+            c)
+                flag_commit=true
+                options_set=true
+                ;;
+            p)
+                flag_push=true
+                options_set=true
+                ;;
+            g)
+                flag_garbage_collect=true
+                options_set=true
+                ;;
+            o)
+                flag_optimise=true
+                options_set=true
+                ;;
             *)
-                echo "Usage: nixrebuild [-c] [-f] [-n] [-h]"
-                echo "  -c            commit changes, requires cloned repo at ~/config"
+                echo "Usage: nixrebuild [FLAGS]"
                 echo "  -f            run 'nix flake update'"
                 echo "  -n            rebuild nixos"
                 echo "  -h            rebuild home-manager"
+                echo "  -c            commit changes, requires cloned repo at ~/config"
+                echo "  -p            push changes, requires cloned repo at ~/config"
+                echo "  -g            run 'nix-collect-garbage'"
+                echo "  -o            run 'nix-store --optimise'"
                 exit 1
                 ;;
         esac
@@ -277,16 +297,46 @@ let
 
     if [ "$options_set" = false ]; then
         echo "Usage: nixrebuild [-c] [-f] [-n] [-h]"
-        echo "  -c            commit changes, requires cloned repo at ~/config"
         echo "  -f            run 'nix flake update'"
         echo "  -n            rebuild nixos"
         echo "  -h            rebuild home-manager"
+        echo "  -c            commit changes, requires cloned repo at ~/config"
+        echo "  -p            push changes, requires cloned repo at ~/config"
+        echo "  -g            run 'nix-collect-garbage'"
+        echo "  -o            run 'nix-store --optimise'"
         exit 1
     fi
 
     REPO_PATH="$HOME/config"
 
-    if $flag_commit; then
+    if [ "$flag_flake_update" = true ]; then
+        if ! nix flake update /config; then
+            echo "Error running nix flake update"
+            exit 1
+        fi
+
+        echo "flake updated"
+    fi
+
+    if [ "$flag_nixos" = true ]; then
+        if ! sudo nixos-rebuild switch --flake /config; then
+            echo "Error rebuilding NixOS"
+            exit 1
+        fi
+
+        echo "nixos rebuilt"
+    fi
+
+    if [ "$flag_home" = true ]; then
+        if ! home-manager switch --flake /config; then
+            echo "Error rebuilding home manager"
+            exit 1
+        fi
+      
+        echo "home-manager rebuilt"
+    fi
+
+    if [ "$flag_commit" = true ]; then
         if [ -d "$REPO_PATH" ]; then
             if ! find "$REPO_PATH" -mindepth 1 -maxdepth 1 ! -name '.*' -exec sudo rm -rf {} + ; then
                 echo "Error cleaning files in $REPO_PATH"
@@ -298,10 +348,11 @@ let
                 exit 1
             fi
 
-            echo "copied to $REPO_PATH"
-
-            cd "$REPO_PATH" || { echo "Error changing directory to $REPO_PATH"; exit 1; }
-
+            if ! cd "$REPO_PATH"; then
+                echo "Error changing directory to $REPO_PATH" 
+                exit 1
+            fi
+            
             if ! git add .; then
                 echo "Error adding files to git"
                 exit 1
@@ -314,34 +365,52 @@ let
                 exit 1
             fi
 
-            echo "successfully committed"
+            echo "Changes committed"
         else
-            echo "something went wrong, skipping commit (check if '$REPO_PATH' exists)"
+            echo "Skipping commit, check if '$REPO_PATH' exists"
         fi
+
+        cd "/config"
     fi
 
-    if [ "$flag_flake_update" = true ]; then
-        if ! nix flake update /config; then
-            echo "Error running nix flake update"
+    if [ "$flag_push" = true ]; then
+        if [ -d "$REPO_PATH" ]; then
+
+            if ! cd "$REPO_PATH"; then
+                echo "Error changing directory to $REPO_PATH" 
+                exit 1
+            fi
+
+            if ! git push; then
+                echo "Error pushing changes to github"
+                exit 1
+            fi
+            echo "Changes pushed"
+        else
+            echo "Skipping push, check if '$REPO_PATH' exists"
+        fi
+
+    fi
+
+    if [ "$flag_garbage_collect" = true ]; then
+        if ! nix-collect-garbage; then
+            echo "Error running nix-collect-garbage"
             exit 1
         fi
+        
+        echo "garbage collected"
     fi
 
-    if [ "$flag_nixos" = true ]; then
-        if ! sudo nixos-rebuild switch --flake /config; then
-            echo "Error rebuilding NixOS"
+    if [ "$flag_optimise" = true ]; then
+        if ! nix-store --optimise; then
+            echo "Error running nix-store --optimise"
             exit 1
         fi
+
+        echo "nix store optimised"
     fi
 
-    if [ "$flag_home" = true ]; then
-        if ! home-manager switch --flake /config; then
-            echo "Error rebuilding home manager"
-            exit 1
-        fi
-    fi
-
-    echo "Finished"
+    echo "Finished with no errors"
   '';
 
   dwmkeys = pkgs.writeShellScriptBin "dwmkeys" ''
