@@ -104,7 +104,11 @@ let
     printf "bright $brightness%%" && exit 0
   '';
 
-  # todo nixshell 
+  nixshell = pkgs.writeShellScriptBin "nixshell" ''
+    SHELLS_PATH="/config/nix-shells"
+
+    nix develop $SHELLS_PATH#$1
+  ''; 
 
   nixconfig = pkgs.writeShellScriptBin "nixconfig" ''
     flag_norebuild=false
@@ -506,6 +510,7 @@ in
     wallpaper_slideshow
     prompt
     dwmkeys
+    nixshell
     nixconfig
     nixrebuild
     sb-homesize
