@@ -9,10 +9,10 @@ let
         percent=$(cat "$battery/capacity") 
         status="$(cat "$battery/status")"
 
-        [ "$status" = "Charging" ] && icon_charge="charging"
-        [ "$status" = "Not charging" ] && icon_charge= "idle"
+        [ "$status" = "Charging" ] && icon_charge="charging "
+        [ "$status" = "Not charging" ] && icon_charge="idle "
 
-        printf "%s%s%d%s" "$icon_charge" " battery " "$percent" "%"
+        printf "%s%s%d%s" "$icon_charge" "battery " "$percent" "%"
     done && exit 0
   '';
 
@@ -21,11 +21,22 @@ let
 
     source sb-colors
 
-    case $BLOCK_BUTTON in # TODO
-    1) exec code;;
+    case "$BLOCK_BUTTON" in
+        1)
+            echo "Button 1 pressed" >> "/home/terminator/test"
+        ;;
+        2)
+            echo "Button 1 with mod4 pressed" >> "/home/terminator/test"
+        ;;
+        3)
+            echo "Button 3 pressed" >> "/home/terminator/test"
+        ;;
+        4)
+            echo "Button 3 with mod4 pressed" >> "/home/terminator/test"
+        ;;
     esac
 
-    printf "%s" "$(date '+%a, %H:%M')" && exit 0
+    printf "%s" "$(date +"%m.%d.%Y %A %H:%M:%S")" && exit 0
   '';
 
   sb-internet = pkgs.writeShellScriptBin "sb-internet" ''
@@ -83,11 +94,27 @@ let
     reset_color="^d^"  # Reset color
   '';
 
+  sb-nixstoresize = pkgs.writeShellScriptBin "sb-nixstoresize" ''
+    # Description: Script to get the size in GB of the /nix/store directory
+    
+    du -sm /nix/store | awk '{size=$1/1000; printf "Nix store: %.2f GB\n", size}' &
+    exit 0
+  '';
+
+  sb-homesize = pkgs.writeShellScriptBin "sb-homesize" ''
+    # Description: Script to get the size in GB of the /home directory
+    
+    du -sm /home | awk '{size=$1/1000; printf "Home: %.2f GB\n", size}' &
+    exit 0
+  '';
+
   sb-brightness = pkgs.writeShellScriptBin "sb-brightness" ''
+    # Description: Script to get current screen brightness percentage
+
     a=$(${pkgs.brightnessctl}/bin/brightnessctl get)
     b=$(${pkgs.brightnessctl}/bin/brightnessctl max)
     brightness=$(awk "BEGIN {printf \"%.0f\", $a / ($b / 100)}")
-    printf "bright $brightness%%"
+    printf "bright $brightness%%" && exit 0
   '';
 
   nixconfig = pkgs.writeShellScriptBin "nixconfig" ''
@@ -425,6 +452,8 @@ in
     dwmkeys
     nixconfig
     nixrebuild
+    sb-homesize
+    sb-nixstoresize
     sb-colors
     sb-brightness
     sb-battery

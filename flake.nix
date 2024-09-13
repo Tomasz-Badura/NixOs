@@ -20,9 +20,14 @@
       ...
     }@inputs:
     let
+      pkgs = nixpkgs.legacyPackages."x86_64-linux";
       inherit (self) outputs;
     in
     {
+      devShells."x86_64-linux" = {
+        php = import ../nix-shells/php.nix { inherit pkgs; };
+      };
+
       overlays = {
         unstable-packages = final: _prev: {
           unstable = import inputs.nixpkgs-unstable {

@@ -155,6 +155,14 @@
       "audio/wav" = [ "mpv.desktop" ];
       "application/pdf" = [ "microsoft-edge.desktop" ];
       "text/html" = [ "microsoft-edge.desktop" ];
+      "x-scheme-handler/http" = [ "microsoft-edge.desktop" ];
+      "x-scheme-handler/https" = [ "microsoft-edge.desktop" ];
+      "x-scheme-handler/about" = [ "microsoft-edge.desktop" ];
+      "x-scheme-handler/unknown" = [ "microsoft-edge.desktop" ];
+
+      "application/x-shellscript" = [ "userapp-notepad-OZXNT2.desktop" ];
+      "text/x-shellscript" = [ "userapp-notepad-OZXNT2.desktop" ];
+      "text/x-ini" = [ "userapp-notepad-OZXNT2.desktop" ];
     };
   };
 
