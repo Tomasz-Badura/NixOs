@@ -3,7 +3,7 @@ let
   sb-battery = pkgs.writeShellScriptBin "sb-battery" ''
     # Description: Script to get battery status
 
-    source sb-colors
+    source sb-config
 
     for battery in /sys/class/power_supply/BAT?; do
         percent=$(cat "$battery/capacity") 
@@ -18,63 +18,62 @@ let
 
   sb-datetime = pkgs.writeShellScriptBin "sb-datetime" ''
     # Description: Script to get current date and time
+    export PATH=${pkgs.nix}/bin:/run/current-system/sw/bin:$PATH
 
-    source sb-colors
+    source sb-config
 
-    case "$BUTTON" in
-        1)
-            echo "Button 1 pressed" >> "/home/terminator/test"
-        ;;
-        2)
-            echo "Button 1 with mod4 pressed" >> "/home/terminator/test"
-        ;;
-        3)
-            echo "Button 3 pressed" >> "/home/terminator/test"
-        ;;
-        4)
-            echo "Button 3 with mod4 pressed" >> "/home/terminator/test"
-        ;;
-    esac
+    handle_button $BUTTON "${pkgs.wezterm}/bin/wezterm start -- $SHELL -c 'run date'" "" "" "code /config/nixos/scripts.nix"
 
     printf "%s" "$(date +"%m.%d.%Y %A %H:%M:%S")" && exit 0
+
   '';
 
   sb-internet = pkgs.writeShellScriptBin "sb-internet" ''
     # Description: Script to get Wi-Fi and Ethernet status
-    source sb-colors
-    icon_wifi=""
-    icon_ethr=""
+    source sb-config
 
     if nmcli dev | grep -q 'wifi.*connected'; then
-        icon_wifi="wifi"
+      echo "wifi"
+      exit 0
     fi
 
     if nmcli dev | grep -q 'ethernet.*connected'; then
-        icon_ethr="ethernet"
+      echo "ethernet"
+      exit 0
     fi
 
-    printf "%s%s\n" "$icon_wifi" "$icon_ethr"
+    echo "not connected"
     exit 0
   '';
 
   sb-ram = pkgs.writeShellScriptBin "sb-ram" ''
     # Description: Script to get ram usage
 
-    source sb-colors
+    source sb-config
     printf "%s%s" "ram " "$(free -mh --si | grep '^Mem:' | awk '{print $3}')" && exit 0
   '';
 
   sb-volume = pkgs.writeShellScriptBin "sb-volume" ''
     # Description: Script to get current volume
 
-    source sb-colors
+    source sb-config
 
     percent="$(pulsemixer --get-volume | awk '{print $1}')"
     printf "%s%d%s" "vol " "$percent" "%" && exit 0
   '';
 
-  sb-colors = pkgs.writeShellScriptBin "sb-colors" ''
-    # Description: Script to define color variables for status scripts
+  sb-config = pkgs.writeShellScriptBin "sb-config" ''
+    # Description: config for sb- scripts
+
+    handle_button() {
+      local number=$1
+      shift
+      local commands=("$@")
+
+      if [[ $number =~ ^[1-4]$ ]] && [[ -n "''${commands[$((number-1))]}" ]]; then
+        eval "''${commands[$((number-1))]}"
+      fi
+    }
 
     text_color="^c#000000^"  # Black text
     accent_color="^c#FFB6FC^"  # Pink accent
@@ -82,11 +81,55 @@ let
   '';
 
   sb-nixstoresize = pkgs.writeShellScriptBin "sb-nixstoresize" ''
-    printf "todo"
+    CACHE_FILE="/tmp/sb-nixstoresize.cache"
+    CACHE_THRESHOLD=600  # 10 minutes in seconds
+
+    get_nix_store_size() {
+      du -sb /nix/store | cut -f1 | awk '{printf "%.2f\n", $1/1024/1024/1024}'
+    }
+
+    if [ -f "$CACHE_FILE" ]; then
+      CACHE_TIME=$(stat -c %Y "$CACHE_FILE")
+      CURRENT_TIME=$(date +%s)
+      
+      if [ $((CURRENT_TIME - CACHE_TIME)) -lt "$CACHE_THRESHOLD" ]; then
+        echo "/nix/store: $(cat $CACHE_FILE) GB"
+      else
+        SIZE=$(get_nix_store_size)
+        echo "$SIZE" > "$CACHE_FILE"
+        echo "/nix/store: $SIZE GB"
+      fi
+    else
+      SIZE=$(get_nix_store_size)
+      echo "$SIZE" > "$CACHE_FILE"
+      echo "/nix/store: $SIZE GB"
+    fi
   '';
 
   sb-homesize = pkgs.writeShellScriptBin "sb-homesize" ''  
-    printf "todo"
+    CACHE_FILE="/tmp/sb-homesize.cache"
+    CACHE_THRESHOLD=600  # 10 minutes in seconds
+
+    get_home_size() {
+      du -sb /home | cut -f1 | awk '{printf "%.2f\n", $1/1024/1024/1024}'
+    }
+
+    if [ -f "$CACHE_FILE" ]; then
+      CACHE_TIME=$(stat -c %Y "$CACHE_FILE")
+      CURRENT_TIME=$(date +%s)
+      
+      if [ $((CURRENT_TIME - CACHE_TIME)) -lt "$CACHE_THRESHOLD" ]; then
+        echo "/home: $(cat $CACHE_FILE) GB"
+      else
+        SIZE=$(get_home_size)
+        echo "$SIZE" > "$CACHE_FILE"
+        echo "/home: $SIZE GB"
+      fi
+    else
+      SIZE=$(get_home_size)
+      echo "$SIZE" > "$CACHE_FILE"
+      echo "/home: $SIZE GB"
+    fi
   '';
 
   sb-brightness = pkgs.writeShellScriptBin "sb-brightness" ''
@@ -464,6 +507,20 @@ let
     [ $(echo -e "No\nYes" | dmenu -fn 'Ubuntu Mono derivative Powerline:size=11' -nb '#FFFFFF' -nf '#000000' -sb '#FFB6FC' -sf '#000000' -i -p "$1") == "Yes" ] && $2
   '';
 
+  run = pkgs.writeShellScriptBin "run" ''
+    if [ -z "$1" ]; then
+      echo "Usage: $0 <command>"
+      exit 1
+    fi
+
+    "$@"
+
+    echo "Press any key to continue..."
+    read -n 1 -s
+
+    $SHELL
+  '';
+
   wallpaper_slideshow = pkgs.writeShellScriptBin "wallpaper_slideshow" ''
     if [ "$#" -ne 2 ]; then
         echo "Usage: $0 <directory> <interval>"
@@ -512,13 +569,14 @@ in
   environment.systemPackages = with pkgs; [
     wallpaper_slideshow
     prompt
+    run
     dwmkeys
     nixshell
     nixconfig
     nixrebuild
     sb-homesize
     sb-nixstoresize
-    sb-colors
+    sb-config
     sb-brightness
     sb-battery
     sb-datetime

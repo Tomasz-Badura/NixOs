@@ -42,7 +42,6 @@
     picom # compositor
     flameshot # screenshot app
     unstable.github-desktop # github client
-    unstable.unityhub # unity game engine
     unstable.gimp # image editor
     unstable.kdePackages.kdenlive # video editor
     unstable.glaxnimate # kdenlive dependency
@@ -54,6 +53,9 @@
     unstable.wine # running windows apps
     brightnessctl # brightness control
     nvtopPackages.full # nvidia monitoring tui
+    jetbrains.rider # .NET IDE
+    unityhub # unity game engine
+    udisks2 gvfs # pcmanfm auto mounting usb drives
     # TODO DAW
 
     (lutris.override {

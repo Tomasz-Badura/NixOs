@@ -6,7 +6,7 @@
 
   outputs = {self, nixpkgs}:
   let
-    pkgs = nixpkgs.legacyPackages."x86_64-linux";
+    pkgs = import nixpkgs { system = "x86_64-linux"; config.allowUnfree = true; };
   in
   {
     devShells."x86_64-linux".php = pkgs.mkShell {
@@ -19,7 +19,6 @@
         pkgs.phpExtensions.mbstring
         pkgs.nodejs
         pkgs.yarn
-        pkgs.vite
       ];
 
       shellHook = ''
@@ -29,6 +28,8 @@
         export MYSQL_UNIX_PORT="$MYSQL_HOME/mysql.sock"
         MYSQL_PID_FILE="$MYSQL_HOME/mysql.pid"
         alias mysql='mysql -u root'
+
+        # TODO: check if mysql server already runnin'
 
         if [ ! -d "$MYSQL_HOME" ]; then
           mysql_install_db --no-defaults --auth-root-authentication-method=normal \
@@ -49,6 +50,18 @@
         
         trap finish EXIT
       '';
+    };
+
+    devShells."x86_64-linux".csharp = pkgs.mkShell {
+      packages = [
+        pkgs.dotnetCorePackages.sdk_8_0_2xx
+      ];
+    };
+
+    devShells."x86_64-linux".java = pkgs.mkShell {
+      packages = [
+        pkgs.jdk
+      ];
     };
   };
 }
