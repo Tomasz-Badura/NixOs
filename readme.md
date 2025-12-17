@@ -8,7 +8,7 @@
 - git clone https://github.com/Tomasz-Badura/NixOs.git
 - sudo mkdir /config
 - sudo cp -r ./NixOs/* /config
-- mv ./NixOs ./config
+- mv ./NixOs /config
 - sudo cp /etc/nixos/hardware-configuration.nix /config/nixos
 - sudo nixos-rebuild switch --flake /config
 - home-manager switch --flake /config
