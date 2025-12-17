@@ -39,7 +39,7 @@
 
       # sudo nixos-rebuild --flake /config
       nixosConfigurations = {
-        TERMINATOR = nixpkgs.lib.nixosSystem {
+        NEXAR = nixpkgs.lib.nixosSystem {
           specialArgs = {
             inherit inputs outputs;
           };
@@ -50,7 +50,7 @@
       # home-manager --flake /config
       # sudo home-manager --flake /config#terminator@TERMINATOR
       homeConfigurations = {
-        "terminator@TERMINATOR" = home-manager.lib.homeManagerConfiguration {
+        "nexar@NEXAR" = home-manager.lib.homeManagerConfiguration {
           pkgs = nixpkgs.legacyPackages.x86_64-linux;
           extraSpecialArgs = {
             inherit inputs outputs;

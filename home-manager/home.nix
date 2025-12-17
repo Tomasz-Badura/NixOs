@@ -19,8 +19,8 @@
   };
 
   home = {
-    username = "terminator";
-    homeDirectory = "/home/terminator";
+    username = "nexar";
+    homeDirectory = "/home/nexar";
   };
 
   home.packages = with pkgs; [
@@ -31,10 +31,7 @@
     unstable.btop # system monitor tui
     steam # game launcher
     vesktop # discord
-    krita # painting program
     obsidian # text editor
-    unstable.obs-studio # screen recording
-    mangohud # overlay for monitoring
     wezterm # terminal
     pavucontrol # volume control
     mpv # media player
@@ -43,20 +40,12 @@
     flameshot # screenshot app
     unstable.github-desktop # github client
     unstable.gimp # image editor
-    unstable.kdePackages.kdenlive # video editor
-    unstable.glaxnimate # kdenlive dependency
-    audacity # audio recorder and editor
     unstable.lazydocker # docker desktop alternative tui
-    unstable.lenovo-legion # lenovo legion toolkit alternative
     nixfmt-rfc-style # nix formatter
     sxhkd # hotkeys
     unstable.wine # running windows apps
     brightnessctl # brightness control
-    nvtopPackages.full # nvidia monitoring tui
-    jetbrains.rider # .NET IDE
-    unityhub # unity game engine
     udisks2 gvfs # pcmanfm auto mounting usb drives
-    # TODO DAW
 
     (lutris.override {
       extraPkgs = pkgs: [
@@ -80,15 +69,6 @@
         }
       '';
     };
-
-    # bottom = {
-    #   enable = true;
-    #   settings = {
-    #     styles = {
-    #       theme = "nord-light";
-    #     };
-    #   };
-    # };
 
     git = {
       enable = true;
@@ -123,13 +103,6 @@
     picom = {
       enable = true;
       backend = "glx";
-      # settings = {
-      #   blur = {
-      #     method = "dual_kawase";
-      #     size = 1;
-      #     deviation = 2;
-      #   };
-      # };
     };
 
     sxhkd = {
@@ -137,8 +110,6 @@
       keybindings = {
         "mod4 + r" = pkgs.writeShellScript "reboot" "prompt 'Reboot?' 'reboot'";
         "mod4 + shift + r" = pkgs.writeShellScript "shutdown" "prompt 'Shutdown?' 'shutdown 0'";
-        "mod4 + l" = pkgs.writeShellScript "lowerbrightness" "brightnessctl set 5%-; pkill -RTMIN+12 dwmblocks;";
-        "mod4 + shift + l" = pkgs.writeShellScript "increasebrightness" "brightnessctl set 5%+; pkill -RTMIN+12 dwmblocks;";
       };
     };
   };

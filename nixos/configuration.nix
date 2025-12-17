@@ -19,18 +19,6 @@
   ];
 
   boot = {
-    # plymouth = 
-    # let 
-    # plymouth-theme = import ../drv/plymouth_theme.nix { inherit pkgs; };
-    # in
-    # {
-    #   enable = true;
-    #   theme = "BoingBall";
-    #   themePackages = [
-    #     plymouth-theme
-    #   ];
-    # };
-
     consoleLogLevel = 0;
     initrd.verbose = false;
     kernelParams = [
@@ -50,35 +38,7 @@
     };
   };
 
-  fileSystems = {
-    "/win" = {
-      device = "dev/nvme0n1p3";
-      fsType = "ntfs";
-      options = [
-        "users"
-        "nofail"
-        "x-gvfs-show"
-      ];
-    };
-  };
-
   hardware = {
-    nvidia = {
-      modesetting.enable = true;
-      powerManagement.enable = false;
-      powerManagement.finegrained = true;
-      open = false;
-      nvidiaSettings = true;
-      prime = {
-        offload.enable = true;
-        offload.enableOffloadCmd = true;
-        intelBusId = "PCI:0:2:0";
-        nvidiaBusId = "PCI:1:0:0";
-      };
-
-      package = config.boot.kernelPackages.nvidiaPackages.stable;
-    };
-
     uinput.enable = true;
 
     opengl.enable = true;
@@ -130,23 +90,16 @@
       xkb.layout = "pl";
       resolutions = [
         {
-          x = 1920;
-          y = 1080;
+          x = 1024;
+          y = 768;
         }
       ];
 
-      videoDrivers = [ "nvidia" ];
       excludePackages = [ pkgs.xterm ];
     };
 
     libinput = {
       enable = true;
-
-      touchpad = {
-        naturalScrolling = true;
-        accelProfile = "flat";
-        accelSpeed = "0.5";
-      };
 
       mouse = {
         accelProfile = "flat";
@@ -170,7 +123,7 @@
 
     displayManager.autoLogin = {
       enable = true;
-      user = "terminator";
+      user = "nexar";
     };
 
     fail2ban.enable = true;
@@ -179,14 +132,14 @@
   hardware.pulseaudio.enable = true;
 
   networking = {
-    hostName = "TERMINATOR";
+    hostName = "NEXAR";
     enableIPv6 = false;
     networkmanager.enable = true;
     firewall.enable = true;
     firewall.allowedTCPPorts = [ 32 ];
   };
 
-  users.users.terminator = {
+  users.users.nexar = {
     initialPassword = "initpass";
     isNormalUser = true;
     extraGroups = [
@@ -197,7 +150,7 @@
       "input"
     ];
     openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHZiSMswBK0/ithgyMfg5YKMadOTW+ys9zoQxWEPlf/k tomaszbadurakontakt@gmail.com"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIGZW6dTSJq/fBEoj75dC0z6NcJ2LptUfS6j19csUWBc tomaszbadurakontakt@gmail.com"
     ];
   };
 
